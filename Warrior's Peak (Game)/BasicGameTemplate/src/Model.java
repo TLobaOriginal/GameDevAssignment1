@@ -30,7 +30,7 @@ SOFTWARE.
  */ 
 public class Model {
 	
-	 private  GameObject Player;
+	 private  Fighter Player;
 	 private GameObject ground;
 	 private Controller controller = Controller.getInstance();
 	 private  CopyOnWriteArrayList<GameObject> EnemiesList  = new CopyOnWriteArrayList<GameObject>();
@@ -38,9 +38,8 @@ public class Model {
 	 private int Score=0; 
 
 	public Model() {
-		 //setup game world 
-		//Player 
-		Player= new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Stand1.png",50,50,new Point3f(500,500,0));
+		//setup game world
+		//Player
 		//Enemies  starting with four 
 		
 		EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*50+400 ),0,0)));
@@ -49,7 +48,7 @@ public class Model {
 		EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+400 ),0,0)));
 		
 		ground = new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/Ground.png", 1400, 200, new Point3f(0, 100, 0));
-	    
+		Player = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Stand1.png",50,118,new Point3f(0,0,0));
 	}
 	
 	// This is the heart of the game , where the model takes in all the inputs ,decides the outcomes and then changes the model accordingly. 
@@ -141,68 +140,73 @@ public class Model {
 	private void playerLogic() throws InterruptedException {
 		
 		// smoother animation is possible if we make a target position  // done but may try to change things for students  
-		 
-		//check for movement and if you fired a bullet 
 
+		if(!controller.isActionIsActive())
+		//check for movement and if you fired a bullet
 		if(!Controller.getInstance().isKeyAPressed() &&
 				!Controller.getInstance().isKeySPressed() &&
 				!Controller.getInstance().isKeyDPressed() &&
 				!Controller.getInstance().isKeyDPressed() &&
-				!Controller.getInstance().isKeyJPressed() &&
-				!Controller.getInstance().isActionIsActive()){
+				!Controller.getInstance().isKeyJPressed()){
 			Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Stand2.png");
 		}
+
 		if(Controller.getInstance().isKeyAPressed()){
 			Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Backward.png");
 			Player.getCentre().ApplyVector( new Vector3f(-2,0,0));
 		}
-		
+
 		if(Controller.getInstance().isKeyDPressed())
 		{
 			Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Forward.png");
 			Player.getCentre().ApplyVector( new Vector3f(2,0,0));
 		}
-			
+
 		if(Controller.getInstance().isKeyWPressed())
 		{
+			Player.getCentre().ApplyVector(new Vector3f(0, 1, 0));
 			Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Jump.png");
+			/*Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Jump.png");
 			for(int i = 0; i < 10; i++) {
 				Player.getCentre().ApplyVector(new Vector3f(0, 1, 0));
 			}
 			for(int i = 0; i < 10; i++) {
 				Player.getCentre().ApplyVector(new Vector3f(0, -1, 0));
-			}
+			}*/
 		}
-		
+
 		if(Controller.getInstance().isKeySPressed()){
-			Player.getCentre().ApplyVector( new Vector3f(0,-2,0));
+			if(Player.checkGrounded(ground)){
+				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Down.png");
+			}else{
+				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Jump.png");
+				Player.getCentre().ApplyVector(new Vector3f(0, -1, 0));
+			}
 		}
 
 		if(Controller.getInstance().isKeyJPressed()){
-			if(Controller.validSubstring("jjjj")){
-				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack4.png");
-				Controller.getInstance().setKeyJPressed(false);
-			}
-			else if(Controller.validSubstring("jjj")){
-				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack3.png");
-				Controller.getInstance().setKeyJPressed(false);
-			}
-			else if(Controller.validSubstring("jj")){
-				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack2.png");
-				Controller.getInstance().setKeyJPressed(false);
-			}
-			else if(Controller.validSubstring("j")){
-				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack1.png");
-				Controller.getInstance().setKeyJPressed(false);
+			if(Player.checkGrounded(ground)) {
+				if (Controller.validSubstring("jjjj")) {
+					Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack4.png");
+					Controller.getInstance().endOfCombo(4000L);
+				} else if (Controller.validSubstring("jjj")) {
+					Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack3.png");
+				} else if (Controller.validSubstring("jj")) {
+					Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack2.png");
+				} else if (Controller.validSubstring("j")) {
+					Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack1.png");
+				}
+			}else{
+				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/JumpKick.png");
 			}
 		}
-		
+
 		if(Controller.getInstance().isKeySpacePressed())
 		{
 			CreateBullet();
 			Controller.getInstance().setKeySpacePressed(false);
-		} 
-		
+		}
+
 	}
 
 	private void CreateBullet() {
@@ -210,7 +214,7 @@ public class Model {
 		
 	}
 
-	public GameObject getPlayer() {
+	public Fighter getPlayer() {
 		return Player;
 	}
 

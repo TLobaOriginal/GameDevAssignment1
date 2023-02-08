@@ -82,9 +82,6 @@ public class Viewer extends JPanel {
 		
 		//Draw background 
 		drawBackground(g);
-		
-		//Draw player
-		drawPlayer(x, y, width, height, texture,g);
 
 		//Draw the ground
 		drawGround((int)gameworld.getGround().getCentre().getX(),
@@ -92,6 +89,9 @@ public class Viewer extends JPanel {
 				(int)gameworld.getGround().getWidth(),
 				(int)gameworld.getGround().getHeight(),
 				gameworld.getGround().getTexture(), g);
+
+		//Draw player
+		drawPlayer(x, y, width, height, texture,g);
 		  
 		//Draw Bullets 
 		// change back 

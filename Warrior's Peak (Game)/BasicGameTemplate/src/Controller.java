@@ -54,9 +54,6 @@ public class Controller implements KeyListener {
 	}
 
 	public void startPlayerComboTimer(Timer timer, long delay){
-		if(comboTimerStarted) {
-			comboTimer.cancel();
-		}
 		comboTimerStarted = true;
 
 		timer.schedule(new TimerTask() {
@@ -70,9 +67,6 @@ public class Controller implements KeyListener {
 	}
 
 	public void startPlayerActiveTimer(Timer timer, long delay){
-		if(activeTimerStarted) {
-			actionTimer.cancel();
-		}
 		activeTimerStarted = true;
 		timer.schedule(new TimerTask() {
 			@Override
@@ -109,8 +103,8 @@ public class Controller implements KeyListener {
 					setKeyJPressed(true);
 					playerComboActive = true;
 					actionIsActive = true;
-					startPlayerComboTimer(comboTimer, 1500L);
-					startPlayerActiveTimer(actionTimer, 400L);
+					startPlayerComboTimer(comboTimer, 2500L);
+					startPlayerActiveTimer(actionTimer, 200L);
 				}
 				break;
 			case ' ':setKeySpacePressed(true);break;   
@@ -226,7 +220,12 @@ public class Controller implements KeyListener {
 		}
 		 return false;
 	}
-	 
+
+	public void endOfCombo(long stuckTime) {
+		 actionIsActive = true;
+		startPlayerComboTimer(comboTimer, 0L);
+		startPlayerActiveTimer(actionTimer, stuckTime);
+	}
 }
 
 /*
