@@ -1,54 +1,49 @@
+import java.awt.*;
+import java.io.File;
+import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import util.GameObject;
 import util.Point3f;
 import util.Vector3f; 
-/*
- * Created by Abraham Campbell on 15/01/2020.
- *   Copyright (c) 2020  Abraham Campbell
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-   
-   (MIT LICENSE ) e.g do what you want with this :-) 
- */ 
 public class Model {
-	
-	 private  Fighter Player;
+	 private Fighter Player1;
+	 private Fighter Player2;
+	 private Rectangle player1HitBox; //Hit box logic referenced from iUniversityPrep's video 'Simple hitboxes'
+	 private Rectangle player2HitBox;
 	 private GameObject ground;
 	 private Controller controller = Controller.getInstance();
-	 private  CopyOnWriteArrayList<GameObject> EnemiesList  = new CopyOnWriteArrayList<GameObject>();
-	 private  CopyOnWriteArrayList<GameObject> BulletList  = new CopyOnWriteArrayList<GameObject>();
-	 private int Score=0; 
+	 private CopyOnWriteArrayList<GameObject> EnemiesList  = new CopyOnWriteArrayList<GameObject>();
+	 private CopyOnWriteArrayList<GameObject> BulletList  = new CopyOnWriteArrayList<GameObject>();
+	 private int Score=0;
+
+	 private HashMap<String, Media> audioMap;
+
 
 	public Model() {
-		//setup game world
-		//Player
-		//Enemies  starting with four 
-		
-		EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*50+400 ),0,0)));
-		EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*50+500 ),0,0)));
-		EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+500 ),0,0)));
-		EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+400 ),0,0)));
+		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*50+400 ),0,0)));
+		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*50+500 ),0,0)));
+		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+500 ),0,0)));
+		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+400 ),0,0)));
 		
 		ground = new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/Ground.png", 1400, 200, new Point3f(0, 100, 0));
-		Player = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Stand1.png",50,118,new Point3f(0,0,0));
+		Player1 = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Right/Stand1.png",50,118,new Point3f(0,400,0), "Right");
+		Player2 = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/Left/Stand1.png",101,208,new Point3f(700,350,0), "Left");
+
+		player1HitBox = new Rectangle(0,400, 50, 118);
+		player2HitBox = new Rectangle(700, 500, 101, 208);
+
+		audioMap = new HashMap<>();
+		audioMap.put("groundRecover", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/ground recover.wav").toURI().toString()));
+		audioMap.put("jump", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/jump.wav").toURI().toString()));
+		audioMap.put("melee1", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/melee1.wav").toURI().toString()));
+		audioMap.put("melee2", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/melee2.wav").toURI().toString()));
+		audioMap.put("melee3", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/melee3.wav").toURI().toString()));
+		audioMap.put("punch1", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/punch1.wav").toURI().toString()));
+		audioMap.put("punch2", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/punch2.wav").toURI().toString()));
+		audioMap.put("punch3", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/punch3.wav").toURI().toString()));
 	}
 	
 	// This is the heart of the game , where the model takes in all the inputs ,decides the outcomes and then changes the model accordingly. 
@@ -57,6 +52,7 @@ public class Model {
 		// Player Logic first 
 		try {
 			playerLogic();
+			player2Logic();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -69,11 +65,22 @@ public class Model {
 	   
 	}
 
+	private void updateDirections(){
+		if(getPlayer1().getCentre().getX() - getPlayer2().getCentre().getX() < 0){
+			getPlayer1().setDirection("Right");
+			getPlayer2().setDirection("Left");
+		} else {
+			getPlayer1().setDirection("Left");
+			getPlayer2().setDirection("Right");
+		}
+	}
+
 	private void gameLogic() {
+		updateDirections();
 		// this is a way to increment across the array list data structure
 		//see if they hit anything (Collision)
 		// using enhanced for-loop style as it makes it alot easier both code wise and reading wise too
-		for (GameObject temp : EnemiesList) 
+		/*for (GameObject temp : EnemiesList)
 		{
 			for (GameObject Bullet : BulletList)
 			{
@@ -85,13 +92,13 @@ public class Model {
 					Score++;
 				}
 			}
-		}
+		}*/
 		
 	}
 
 	private void enemyLogic() {
 		// TODO Auto-generated method stub
-		for (GameObject temp : EnemiesList) 
+		/*for (GameObject temp : EnemiesList)
 		{
 		    // Move enemies 
 			  
@@ -101,7 +108,7 @@ public class Model {
 			//see if they get to the top of the screen ( remember 0 is the top 
 			if (temp.getCentre().getY()==900.0f)  // current boundary need to pass value to model 
 			{
-				EnemiesList.remove(temp);
+				//EnemiesList.remove(temp);
 				
 				// enemies win so score decreased 
 				Score--;
@@ -114,7 +121,7 @@ public class Model {
 			{
 				EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*1000),0,0)));
 			}
-		}
+		}*/
 	}
 
 	private void bulletLogic() {
@@ -138,84 +145,229 @@ public class Model {
 	}
 
 	private void playerLogic() throws InterruptedException {
-		
 		// smoother animation is possible if we make a target position  // done but may try to change things for students  
 
-		if(!controller.isActionIsActive())
+		//if(!controller.isActionIsActive())
 		//check for movement and if you fired a bullet
 		if(!Controller.getInstance().isKeyAPressed() &&
 				!Controller.getInstance().isKeySPressed() &&
 				!Controller.getInstance().isKeyDPressed() &&
-				!Controller.getInstance().isKeyDPressed() &&
-				!Controller.getInstance().isKeyJPressed()){
-			Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Stand2.png");
+				!Controller.getInstance().isKeyJPressed() && Player1.checkGrounded(ground)){
+			Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Stand2.png");
+			if(Player1.checkGrounded(ground))
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Stand2.png");
+			else
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Jump.png");
 		}
 
+		if(!Player1.checkGrounded(ground))
+			getPlayer1().setGrounded(false);
+
 		if(Controller.getInstance().isKeyAPressed()){
-			Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Backward.png");
-			Player.getCentre().ApplyVector( new Vector3f(-2,0,0));
+			if(getPlayer1().checkGrounded(ground) && getPlayer1().grounded) {
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
+				mediaPlayer.play();
+				getPlayer1().setGrounded(false);
+			}
+			if(Player1.direction.equals("Right"))
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Backward.png");
+			else
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Forward.png");
+			player1HitBox.setLocation(player1HitBox.getLocation().x - 2, player1HitBox.getLocation().y);
+			Player1.getCentre().ApplyVector( new Vector3f(-2,0,0));
 		}
 
 		if(Controller.getInstance().isKeyDPressed())
 		{
-			Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Forward.png");
-			Player.getCentre().ApplyVector( new Vector3f(2,0,0));
+			if(getPlayer1().checkGrounded(ground) && getPlayer1().grounded) {
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
+				mediaPlayer.play();
+				getPlayer1().setGrounded(false);
+			}
+			if(Player1.direction.equals("Right"))
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Forward.png");
+			else
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Backward.png");
+			player1HitBox.setLocation(player1HitBox.getLocation().x + 2, player1HitBox.getLocation().y);
+			Player1.getCentre().ApplyVector( new Vector3f(2,0,0));
 		}
 
 		if(Controller.getInstance().isKeyWPressed())
 		{
-			Player.getCentre().ApplyVector(new Vector3f(0, 1, 0));
-			Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Jump.png");
-			/*Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Jump.png");
-			for(int i = 0; i < 10; i++) {
-				Player.getCentre().ApplyVector(new Vector3f(0, 1, 0));
+			if(getPlayer1().checkGrounded(ground) && getPlayer1().grounded) {
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
+				mediaPlayer.play();
+				getPlayer1().setGrounded(false);
 			}
-			for(int i = 0; i < 10; i++) {
-				Player.getCentre().ApplyVector(new Vector3f(0, -1, 0));
-			}*/
+			Player1.getCentre().ApplyVector(new Vector3f(0, 1, 0));
+			player1HitBox.setLocation(player1HitBox.getLocation().x, player1HitBox.getLocation().y + 1);
+			Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Jump.png");
 		}
 
 		if(Controller.getInstance().isKeySPressed()){
-			if(Player.checkGrounded(ground)){
-				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Down.png");
+			if(Player1.checkGrounded(ground)){
+				if(!getPlayer1().grounded) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("groundRecover"));
+					mediaPlayer.play();
+					getPlayer1().setGrounded(true);
+				}
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Down.png");
 			}else{
-				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Jump.png");
-				Player.getCentre().ApplyVector(new Vector3f(0, -1, 0));
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Jump.png");
+				player1HitBox.setLocation(player1HitBox.getLocation().x, player1HitBox.getLocation().y - 1);
+				Player1.getCentre().ApplyVector(new Vector3f(0, -1, 0));
 			}
 		}
 
 		if(Controller.getInstance().isKeyJPressed()){
-			if(Player.checkGrounded(ground)) {
-				if (Controller.validSubstring("jjjj")) {
-					Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack4.png");
-					Controller.getInstance().endOfCombo(4000L);
-				} else if (Controller.validSubstring("jjj")) {
-					Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack3.png");
-				} else if (Controller.validSubstring("jj")) {
-					Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack2.png");
-				} else if (Controller.validSubstring("j")) {
-					Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Attack1.png");
+			if(Player1.checkGrounded(ground)) {
+				if (Controller.validSubstringPlayer1("jjjj")) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
+					mediaPlayer.play();
+					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Attack4.png");
+					Controller.getInstance().endOfComboPlayer1(2000L, 0L);
+				} else if (Controller.validSubstringPlayer1("jjj")) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee3"));
+					mediaPlayer.play();
+					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Attack3.png");
+					Controller.getInstance().endOfComboPlayer1(1000L, 2000L);
+				} else if (Controller.validSubstringPlayer1("jj")) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee2"));
+					mediaPlayer.play();
+					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Attack2.png");
+					Controller.getInstance().endOfComboPlayer1(1000L, 2000L);
+				} else if (Controller.validSubstringPlayer1("j")) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
+					mediaPlayer.play();
+					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/Attack1.png");
 				}
 			}else{
-				Player.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/JumpKick.png");
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
+				mediaPlayer.play();
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction +"/JumpKick.png");
+				Controller.getInstance().endOfComboPlayer1(2000L, 0L);
 			}
 		}
 
-		if(Controller.getInstance().isKeySpacePressed())
+		/*if(Controller.getInstance().isKeySpacePressed())
 		{
 			CreateBullet();
 			Controller.getInstance().setKeySpacePressed(false);
+		}*/
+
+	}
+
+	private void player2Logic() throws InterruptedException {
+		// smoother animation is possible if we make a target position  // done but may try to change things for students
+		//check for movement and if you fired a bullet
+		if(!Controller.getInstance().isKeyLeftKeyPressed() &&
+				!Controller.getInstance().isKeyDownKeyPressed() &&
+				!Controller.getInstance().isKeyRightKeyPressed() &&
+				!Controller.getInstance().isKeyKPressed()) {
+			if(Player2.checkGrounded(ground))
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Stand2.png");
+			else
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Jump.png");
 		}
 
+		if(Controller.getInstance().isKeyLeftKeyPressed()){
+			if(getPlayer2().checkGrounded(ground) && !getPlayer2().grounded) {
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
+				mediaPlayer.play();
+				getPlayer2().setGrounded(true);
+			}
+			if(Player2.direction.equals("Right"))
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Backward.png");
+			else
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Forward.png");
+			player2HitBox.setLocation(player2HitBox.getLocation().x - 2, player2HitBox.getLocation().y);
+			Player2.getCentre().ApplyVector( new Vector3f(-2,0,0));
+		}
+
+		if(Controller.getInstance().isKeyRightKeyPressed())
+		{
+			if(getPlayer2().checkGrounded(ground) && !getPlayer2().grounded) {
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
+				mediaPlayer.play();
+				getPlayer2().setGrounded(true);
+			}
+			if(Player2.direction.equals("Right"))
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Forward.png");
+			else
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Backward.png");
+			player2HitBox.setLocation(player2HitBox.getLocation().x + 2, player2HitBox.getLocation().y);
+			Player2.getCentre().ApplyVector( new Vector3f(2,0,0));
+		}
+
+		if(Controller.getInstance().isKeyUpKeyPressed())
+		{
+			if(getPlayer2().checkGrounded(ground) && !getPlayer2().grounded) {
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
+				mediaPlayer.play();
+				getPlayer2().setGrounded(true);
+			}
+			player2HitBox.setLocation(player2HitBox.getLocation().x, player2HitBox.getLocation().y + 1);
+			Player2.getCentre().ApplyVector(new Vector3f(0, 1, 0));
+			Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Jump.png");
+		}
+
+		if(Controller.getInstance().isKeyDownKeyPressed()){
+			if(Player2.checkGrounded(ground)){
+				if(!getPlayer2().grounded) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("groundRecover"));
+					mediaPlayer.play();
+					getPlayer2().setGrounded(true);
+				}
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Down.png");
+			}else{
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Jump.png");
+				player2HitBox.setLocation(player2HitBox.getLocation().x, player2HitBox.getLocation().y - 1);
+				Player2.getCentre().ApplyVector(new Vector3f(0, -1, 0));
+			}
+		}
+
+		if(Controller.getInstance().isKeyKPressed()){
+			if(Player2.checkGrounded(ground)) {
+				if (Controller.validSubstringPlayer2("kkkk")) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
+					mediaPlayer.play();
+					Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Attack4.png");
+					Controller.getInstance().endOfComboPlayer2(2000L, 0L);
+				} else if (Controller.validSubstringPlayer2("kkk")) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee3"));
+					mediaPlayer.play();
+					Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Attack3.png");
+					Controller.getInstance().endOfComboPlayer2(1000L, 2000L);
+				} else if (Controller.validSubstringPlayer2("kk")) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee2"));
+					mediaPlayer.play();
+					Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Attack2.png");
+					Controller.getInstance().endOfComboPlayer2(1000L, 2000L);
+				} else if (Controller.validSubstringPlayer2("k")) {
+					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
+					mediaPlayer.play();
+					Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/Attack1.png");
+				}
+			}else{
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
+				mediaPlayer.play();
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction +"/JumpKick.png");
+				Controller.getInstance().endOfComboPlayer2(2000L, 0L);
+			}
+		}
 	}
 
 	private void CreateBullet() {
-		BulletList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/Bullet.png",32,64,new Point3f(Player.getCentre().getX(),Player.getCentre().getY(),0.0f)));
+		BulletList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/Bullet.png",32,64,new Point3f(Player1.getCentre().getX(), Player1.getCentre().getY(),0.0f)));
 		
 	}
 
-	public Fighter getPlayer() {
-		return Player;
+	public Fighter getPlayer1() {
+		return Player1;
+	}
+
+	public Fighter getPlayer2() {
+		return Player2;
 	}
 
 	public CopyOnWriteArrayList<GameObject> getEnemies() {

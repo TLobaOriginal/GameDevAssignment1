@@ -36,6 +36,18 @@ public class Vector3f {
 		setY(0.0f);
 		setZ(0.0f);
 	}
+
+	public Vector3f(Point3f point3f){
+		this.setX(point3f.getX());
+		this.setY(point3f.getY());
+		this.setZ(point3f.getZ());
+	}
+
+	public Vector3f(Vector3f vector3f){
+		this.setX(vector3f.getX());
+		this.setY(vector3f.getY());
+		this.setZ(vector3f.getZ());
+	}
 	 
 	public Vector3f(float x, float y, float z) 
 	{ 

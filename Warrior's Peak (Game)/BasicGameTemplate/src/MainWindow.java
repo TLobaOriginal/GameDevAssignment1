@@ -12,6 +12,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import javafx.embed.swing.JFXPanel;
 import util.UnitTests;
 
 /*
@@ -48,8 +49,9 @@ public class MainWindow {
 	 private KeyListener Controller =new Controller()  ; 
 	 private static   int TargetFPS = 100;
 	 private static boolean startGame= false; 
-	 private   JLabel BackgroundImageForStartMenu ;
-	  
+	 private JLabel BackgroundImageForStartMenu ;
+	 private final JFXPanel fxPanel = new JFXPanel();
+
 	public MainWindow() {
 		frame.setSize(900, 700);  // you can customise this later and adapt it to change on size.
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);   //If exit // you can modify with your way of quitting , just is a template.

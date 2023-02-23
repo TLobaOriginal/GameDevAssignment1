@@ -1,0 +1,17 @@
+https://github.com/TLobaOriginal/GameDevAssignment1.git
+
+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
+
+
+
+
+========================================
+SPECIAL NOTES
+========================================
+Upon descending, if the speed at which we go down is greater the one, there is a chance that the line gets bypassed.
+Many ways to fix this
+- Currently, the y change be -1 and not 1
+- I could also see if the centre of the player is beyond a certain point and jerk them back but that can be a bit jarring.
+
+
+
