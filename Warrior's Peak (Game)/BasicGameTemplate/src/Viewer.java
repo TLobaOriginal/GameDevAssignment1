@@ -1,6 +1,4 @@
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.LayoutManager;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -102,7 +100,10 @@ public class Viewer extends JPanel {
 				gameworld.getPlayer2().getWidth(),
 				gameworld.getPlayer2().getHeight(),
 				gameworld.getPlayer2().getTexture(), g);
-		//Draw Bullets 
+
+		drawPlayerHitBox(gameworld.getPlayer1HitBox(), g);
+		drawPlayerHitBox(gameworld.getPlayer2HitBox(), g);
+		//Draw Bullets
 		// change back 
 		gameworld.getBullets().forEach((temp) -> 
 		{ 
@@ -115,6 +116,14 @@ public class Viewer extends JPanel {
 			drawEnemies((int) temp.getCentre().getX(), (int) temp.getCentre().getY(), (int) temp.getWidth(), (int) temp.getHeight(), temp.getTexture(),g);	 
 		 
 	    }); 
+	}
+
+	private void drawPlayerHitBox(Rectangle playerHB, Graphics g) {
+		if(gameworld.colliding())
+			g.setColor(Color.RED);
+		else
+			g.setColor(Color.GREEN);
+		g.drawRect((int)playerHB.getX(), (int)playerHB.getY(), (int)playerHB.getWidth(), (int)playerHB.getHeight());
 	}
 
 	private void drawGround(int x, int y, int width, int height, String texture, Graphics g) {

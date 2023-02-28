@@ -1,6 +1,7 @@
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.*;
+import java.util.Timer;
 
 /*
  * Created by Abraham Campbell on 15/01/2020.
@@ -38,12 +39,12 @@ public class Controller implements KeyListener {
 	private static boolean KeyJPressed = false;
 
 	//Player 2 keys
-	private static boolean KeySpacePressed= false;
+	private static boolean KeySpacePressed = false;
 	private static boolean KeyKPressed = false;
-	private static boolean KeyRightKeyPressed=false;
-	private static boolean KeyLeftKeyPressed=false;
-	private static boolean KeyUpKeyPressed=false;
-	private static boolean KeyDownKeyPressed=false;
+	private static boolean KeyRightKeyPressed = false;
+	private static boolean KeyLeftKeyPressed = false;
+	private static boolean KeyUpKeyPressed = false;
+	private static boolean KeyDownKeyPressed = false;
 
 	//Player 1 items!
 	private static boolean player1ComboActive = false; //We can make combo string with keys
@@ -74,10 +75,18 @@ public class Controller implements KeyListener {
 	}
 
 	public void startPlayerComboTimer(Timer timer, long delay, List<Character> inputs, boolean playerComboActive, boolean comboTimerStart){
-		startPlayerCombo(playerComboActive, comboTimerStart);
+		try{
+			if(comboTimerStart)
+				timer.cancel();
+		}catch (Exception ex){
+			System.out.println("Combo timer not active (CANNOT CANCEL)");
+		}
+		 startPlayerCombo(playerComboActive, comboTimerStart);
+		System.out.println("Combo Timer started. Combo time: " + delay);
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
+				System.out.println("Combo timer ended");
 				inputs.removeAll(inputs);
 				stopPlayerCombo(playerComboActive, comboTimerStart);
 			}
@@ -85,12 +94,37 @@ public class Controller implements KeyListener {
 	}
 
 	public void startPlayerActiveTimer(Timer timer, long delay, boolean playerActive, boolean playerActiveTimer){
+		try{
+			if(playerActiveTimer)
+				timer.cancel();
+		}catch (Exception ex){
+			System.out.println("Combo timer not active (CANNOT CANCEL)");
+		}
 		startPlayerActiveState(playerActive, playerActiveTimer);
+		System.out.println("Active Timer started. Stuck time: " + delay);
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				actionPlayer1IsActive = false;
-				activeTimer1Started = false;
+				System.out.println("Active timer ended");
+				stopPlayerActiveState(playerActive, playerActiveTimer);
+			}
+		}, delay);
+	}
+
+	public void startPlayerHitTimer(Timer timer, long delay, boolean playerActive, boolean playerActiveTimer, Fighter player){
+		 try{
+			 timer.cancel();
+		 }catch (Exception ex){
+			 System.out.println("Active timer not active (CANNOT CANCEL)");
+		 }
+		startPlayerActiveState(playerActive, playerActiveTimer);
+		System.out.println("Active Timer started. Stuck time: " + delay);
+		timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				System.out.println("Active timer ended");
+				player.beingHit = false;
+				stopPlayerActiveState(playerActive, playerActiveTimer);
 			}
 		}, delay);
 	}
@@ -117,12 +151,11 @@ public class Controller implements KeyListener {
 			case KeyEvent.VK_J:
 				if(!actionPlayer1IsActive && !isKeyJPressed()) { //If an action is not being carried out and
 					keyBoardInputs1.add('j');
-
 					setKeyJPressed(true);
-					player1ComboActive = true;
-					actionPlayer1IsActive = true;
-					startPlayerComboTimer(comboTimerPlayer1, 2500L, keyBoardInputs1, player1ComboActive, comboTimer1Started);
-					startPlayerActiveTimer(actionTimerPlayer1, 200L, actionPlayer1IsActive, activeTimer1Started);
+					//player1ComboActive = true;
+					//actionPlayer1IsActive = true;
+					//startPlayerComboTimer(comboTimerPlayer1, 2500L, keyBoardInputs1, player1ComboActive, comboTimer1Started);
+					//startPlayerActiveTimer(actionTimerPlayer1, 200L, actionPlayer1IsActive, activeTimer1Started);
 				}
 				break;
 			case KeyEvent.VK_RIGHT: setKeyRightKeyPressed(true);break;
@@ -131,22 +164,19 @@ public class Controller implements KeyListener {
 			case KeyEvent.VK_DOWN: setKeyDownKeyPressed(true);break;
 			case KeyEvent.VK_K:
 				setKeyKPressed(true);
-				if(!actionPlayer2IsActive && !isKeyDownKeyPressed()) { //If an action is not being carried out and
+				if(!actionPlayer2IsActive && !isKeyKPressed()) { //If an action is not being carried out and
 					keyBoardInputs2.add('k');
 					setKeyKPressed(true);
-					player2ComboActive = true;
-					actionPlayer2IsActive = true;
-					startPlayerComboTimer(comboTimerPlayer2, 2500L, keyBoardInputs2, player2ComboActive, comboTimer2Started);
-					startPlayerActiveTimer(actionTimerPlayer2, 200L, actionPlayer2IsActive, activeTimer2Started);
+					//player2ComboActive = true;
+					//actionPlayer2IsActive = true;
+					//startPlayerComboTimer(comboTimerPlayer2, 2500L, keyBoardInputs2, player2ComboActive, comboTimer2Started);
+					//startPlayerActiveTimer(actionTimerPlayer2, 200L, actionPlayer2IsActive, activeTimer2Started);
 				}
 				break;
 		    default:
 		    	System.out.println("Controller test:  Unknown key pressed");
 		        break;
-		}  
-		
-	 // You can implement to keep moving while pressing the key here . 
-		
+		}
 	}
 
 	@Override
@@ -235,30 +265,57 @@ public class Controller implements KeyListener {
 		KeyKPressed = keyKPressed;
 	}
 
+	public static boolean isActionPlayer1IsActive() {
+		return actionPlayer1IsActive;
+	}
+
+	public static boolean isActionPlayer2IsActive() {
+		return actionPlayer2IsActive;
+	}
 
 	public void startPlayerCombo(boolean playerComboActive, boolean playerComboTimeStarted){
+		//System.out.println("Starting....................");
+		//System.out.println("Player Combo state initially: " + playerComboActive +
+		//		"\nPlayer Combo Timer initially: " + playerComboTimeStarted);
 		 playerComboActive = true;
 		 playerComboTimeStarted = true;
+		//System.out.println("Player Combo state now: " + playerComboActive +
+		//		"\nPlayer Combo Timer now: " + playerComboTimeStarted);
 	}
 	public void stopPlayerCombo(boolean playerComboActive, boolean playerComboTimeStarted){
+		//System.out.println("Stopping....................");
+		//System.out.println("Player Combo state initially: " + playerComboActive +
+		//		"\nPlayer Combo Timer initially: " + playerComboTimeStarted);
 		 playerComboActive = false;
 		 playerComboTimeStarted = false;
+		//System.out.println("Player Combo state now: " + playerComboActive +
+		//		"\nPlayer Combo Timer now: " + playerComboTimeStarted);
 	}
 
 	public void startPlayerActiveState(boolean playerActiveState, boolean playerActiveTimer){
+		//System.out.println("Starting....................");
+		//System.out.println("Player Active state initially: " + playerActiveState +
+		//		"\nPlayer Active Timer initially: " + playerActiveTimer);
 		 playerActiveState = true;
 		 playerActiveTimer = true;
+		//System.out.println("Player Active state now: " + playerActiveState +
+		//		"\nPlayer Active Timer  now: " + playerActiveTimer);
 	}
 	public void stopPlayerActiveState(boolean playerActiveState, boolean playerActiveTimer){
+		//System.out.println("Stopping....................");
+		//System.out.println("Player Active state initially: " + playerActiveState +
+		//		"\nPlayer Active Timer initially: " + playerActiveTimer);
 		playerActiveState = false;
 		playerActiveTimer = false;
+		//System.out.println("Player Active state now: " + playerActiveState +
+		//		"\nPlayer Active Timer  now: " + playerActiveTimer);
 	}
 
 	public static boolean validSubstringPlayer1(String comboList){
 		 /* Combo valid algorithm
 		 * If the string is a substring in the array*/;
-		System.out.println("Looking for: " + comboList);
-		System.out.print("Input string collection: ");
+		//System.out.println("Looking for: " + comboList);
+		//System.out.print("Input string collection: ");
 		for(Character character: keyBoardInputs1){
 			System.out.print(character);
 		}
@@ -281,8 +338,8 @@ public class Controller implements KeyListener {
 	public static boolean validSubstringPlayer2(String comboList){
 		/* Combo valid algorithm
 		 * If the string is a substring in the array*/;
-		System.out.println("Looking for: " + comboList);
-		System.out.print("Input string collection: ");
+		//System.out.println("Looking for: " + comboList);
+		//System.out.print("Input string collection: ");
 		for(Character character: keyBoardInputs2){
 			System.out.print(character);
 		}
@@ -302,13 +359,22 @@ public class Controller implements KeyListener {
 		return false;
 	}
 
-	public void endOfComboPlayer1(long stuckTime, long comboTime) {actionPlayer1IsActive = true;
-		startPlayerComboTimer(comboTimerPlayer1, comboTime, keyBoardInputs1, player1ComboActive, comboTimer1Started);
-		startPlayerActiveTimer(actionTimerPlayer1, stuckTime, actionPlayer1IsActive, activeTimer1Started);
+	public void freezePlayer1(Fighter player, long stuck){
+		startPlayerHitTimer(actionTimerPlayer1, stuck, actionPlayer1IsActive, activeTimer1Started, player);
+	}
+
+	public void freezePlayer2(Fighter player, long stuck){
+		startPlayerHitTimer(actionTimerPlayer2, stuck, actionPlayer2IsActive, activeTimer2Started, player);
+	}
+
+	public void endOfComboPlayer1(long stuckTime, long comboTime) {
+		 //actionPlayer1IsActive = true;
+		 startPlayerComboTimer(comboTimerPlayer1, comboTime, keyBoardInputs1, player1ComboActive, comboTimer1Started);
+		 startPlayerActiveTimer(actionTimerPlayer1, stuckTime, actionPlayer1IsActive, activeTimer1Started);
 	}
 
 	public void endOfComboPlayer2(long stuckTime, long comboTime) {
-		actionPlayer2IsActive = true;
+		//actionPlayer2IsActive = true;
 		startPlayerComboTimer(comboTimerPlayer2, comboTime, keyBoardInputs2, player2ComboActive, comboTimer2Started);
 		startPlayerActiveTimer(actionTimerPlayer2, stuckTime, actionPlayer2IsActive, activeTimer2Started);
 	}
