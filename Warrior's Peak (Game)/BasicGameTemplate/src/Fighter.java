@@ -1,10 +1,7 @@
 import util.GameObject;
 import util.Point3f;
-import util.Vector3f;
-
-import javafx.scene.media.Media;
-
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -13,6 +10,8 @@ public class Fighter extends GameObject {
     String direction;
     Fighter opponent;
     BufferedImage currentImage;
+    Rectangle playerHitBox;
+    HealthBar healthBar;
 
     //States
     boolean grounded = false;
@@ -20,10 +19,11 @@ public class Fighter extends GameObject {
 
     public Fighter(String resourcePackageLocation, String textureLocation,
                    int width, int height, Point3f centre,
-                   String direction){
+                   String direction, HealthBar healthBar){
         super(textureLocation, width, height, centre);
         this.direction = direction;
         this.resourcePackageLocation = resourcePackageLocation;
+        this.healthBar = healthBar;
         try {
             currentImage = ImageIO.read(new File(textureLocation));
         }catch (Exception ex){
@@ -31,8 +31,12 @@ public class Fighter extends GameObject {
         }
     }
 
-    public void setOpponent(Fighter opponent) {
-        this.opponent = opponent;
+    public void setPlayerHitBox(Rectangle playerHitBox) {
+        this.playerHitBox = playerHitBox;
+    }
+
+    public HealthBar getHealthBar() {
+        return healthBar;
     }
 
     public void onCollisionWithAttack(String opponentAttackPose){
@@ -54,7 +58,7 @@ public class Fighter extends GameObject {
         else if(opponentAttackPose.contains("Attack2"))
             setTextureLocation(resourcePackageLocation + direction + "/Hurt2.png");
         else if(opponentAttackPose.contains("Attack3"))
-            setTextureLocation(resourcePackageLocation + direction + "/Hurt3.png");
+            setTextureLocation(resourcePackageLocation + direction + "/Hurt1.png");
         else if(opponentAttackPose.contains("Attack4"))
             setTextureLocation(resourcePackageLocation + direction + "/HurtLaunch.png");
         else if(opponentAttackPose.contains("JumpKick"))
@@ -64,20 +68,8 @@ public class Fighter extends GameObject {
     private void setBeingHit(boolean b) {
     }
 
-    public boolean checkGrounded(GameObject ground){
-        /*Vector3f rayCastBegin = new Vector3f(getCentre());
-        float innerPlayerWidth = getWidth() * 0.6f;
-        rayCastBegin.PlusPoint(new Point3f(-1*(innerPlayerWidth/2.0f), 0.0f, 0.0f));
-        float yValue = getHeight()/2.0f;
-        Vector3f rayCastEnd = new Vector3f(rayCastBegin).PlusVector(new Vector3f(0.0f, yValue, 0.0f));
-
-        RayCastInfo*/
-
-        if ((ground.getCentre().getY() + 300 + (getHeight() / 2)) == getCentre().getY()){
-            //System.out.println("I AM Touching the ground!!!");
-            return true;
-        }
-        return false;
+    public boolean checkGrounded(Rectangle ground){
+        return playerHitBox.intersects(ground);
     }
 
     public void setDirection(String direction) {

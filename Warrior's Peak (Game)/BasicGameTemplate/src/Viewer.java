@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
+import javafx.scene.text.Text;
 
 
 /*
@@ -101,8 +102,21 @@ public class Viewer extends JPanel {
 				gameworld.getPlayer2().getHeight(),
 				gameworld.getPlayer2().getTexture(), g);
 
-		drawPlayerHitBox(gameworld.getPlayer1HitBox(), g);
-		drawPlayerHitBox(gameworld.getPlayer2HitBox(), g);
+		drawPlayer1Health((int)gameworld.getPlayer1().getHealthBar().getCentre().getX(),
+				(int)gameworld.getPlayer1().getHealthBar().getCentre().getY(),
+				(int)gameworld.getPlayer1().getHealthBar().getCentre().getX() + 150,
+				(int)gameworld.getPlayer1().getHealthBar().getCentre().getY() + 50,
+				gameworld.getPlayer1().getHealthBar().getTexture(), g);
+
+		drawPlayer2Health((int)gameworld.getPlayer2().getHealthBar().getCentre().getX(),
+				(int)gameworld.getPlayer2().getHealthBar().getCentre().getY(),
+				(int)gameworld.getPlayer2().getHealthBar().getCentre().getX() + 100,
+				(int)gameworld.getPlayer2().getHealthBar().getCentre().getY() + 50,
+				gameworld.getPlayer2().getHealthBar().getTexture(), g);
+
+		//drawPlayerHitBox(gameworld.getPlayer1HitBox(), g);
+		//drawPlayerHitBox(gameworld.getPlayer2HitBox(), g);
+		//drawGroundHitBox(gameworld.getGroundHitBox(), g);
 		//Draw Bullets
 		// change back 
 		gameworld.getBullets().forEach((temp) -> 
@@ -118,12 +132,49 @@ public class Viewer extends JPanel {
 	    }); 
 	}
 
+	private void drawPlayer1Health(int x, int y, int textX, int textY, String texture, Graphics g) {
+		File TextureToLoad = new File(texture);  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE
+		try {
+			Image myImage = ImageIO.read(TextureToLoad);
+			g.drawImage(myImage, x, y, 300, 100, null);
+			g.setFont(new Font("AvantGrande", Font.BOLD, 28));
+			g.setColor(Color.WHITE);
+			g.drawString(Integer.toString((int)gameworld.getPlayer1().getHealthBar().getHealthPoints()), textX, textY);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void drawPlayer2Health(int x, int y, int textX, int textY, String texture, Graphics g) {
+		File TextureToLoad = new File(texture);  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE
+		try {
+			Image myImage = ImageIO.read(TextureToLoad);
+			g.drawImage(myImage, x, y, 300, 100, null);
+			g.setFont(new Font("AvantGrande", Font.BOLD, 28));
+			g.setColor(Color.WHITE);
+			g.drawString(Integer.toString((int)gameworld.getPlayer2().getHealthBar().getHealthPoints()), textX, textY);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+
 	private void drawPlayerHitBox(Rectangle playerHB, Graphics g) {
 		if(gameworld.colliding())
 			g.setColor(Color.RED);
 		else
 			g.setColor(Color.GREEN);
 		g.drawRect((int)playerHB.getX(), (int)playerHB.getY(), (int)playerHB.getWidth(), (int)playerHB.getHeight());
+	}
+
+	private void drawGroundHitBox(Rectangle groundHB, Graphics g) {
+		if(gameworld.groundCollision())
+			g.setColor(Color.RED);
+		else
+			g.setColor(Color.GREEN);
+		g.drawRect((int)groundHB.getX(), (int)groundHB.getY(), (int)groundHB.getWidth(), (int)groundHB.getHeight());
 	}
 
 	private void drawGround(int x, int y, int width, int height, String texture, Graphics g) {

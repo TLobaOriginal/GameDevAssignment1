@@ -13,9 +13,12 @@ import util.Vector3f;
 public class Model {
 	 private Fighter Player1;
 	 private Fighter Player2;
-	 private Rectangle player1HitBox; //Hit box logic referenced from iUniversityPrep's video 'Simple hitboxes'
+	 private Rectangle player1HitBox; //Hit box logic referenced from iUniversityPrep's youtube video 'Simple hitboxes'
+									  //Idea inspired by Abey Campbell
 	 private Rectangle player2HitBox;
+	 private Rectangle groundHitBox;
 	 private GameObject ground;
+
 	 private Controller controller = Controller.getInstance();
 	 private CopyOnWriteArrayList<GameObject> EnemiesList  = new CopyOnWriteArrayList<GameObject>();
 	 private CopyOnWriteArrayList<GameObject> BulletList  = new CopyOnWriteArrayList<GameObject>();
@@ -29,16 +32,25 @@ public class Model {
 		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*50+500 ),0,0)));
 		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+500 ),0,0)));
 		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+400 ),0,0)));
-		
+
 		ground = new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/Ground.png", 1400, 200, new Point3f(0, 100, 0));
 		Player1 = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/",
-				"Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Right/Stand1.png",50,118,new Point3f(0,400,0), "Right");
+				"Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Right/Stand1.png",
+				50,118,new Point3f(0,400,0),
+				"Right", new HealthBar(5000, "Right", new Point3f(0, 45, 0)));
 
 		Player2 = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/",
-				"Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/Left/Stand1.png",101,208,new Point3f(700,350,0), "Left");
+				"Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/Left/Stand1.png",
+				101,208,new Point3f(700,350,0),
+				"Left", new HealthBar(5000, "Left", new Point3f(578, 45, 0)));
 
 		player1HitBox = new Rectangle(0,400, Player1.currentImage.getWidth(), Player1.currentImage.getHeight());
 		player2HitBox = new Rectangle(700, 350, Player2.currentImage.getWidth(), Player2.currentImage.getHeight());
+		groundHitBox = new Rectangle(0, 490,877, 155);
+
+
+		Player1.setPlayerHitBox(player1HitBox);
+		Player2.setPlayerHitBox(player2HitBox);
 
 		audioMap = new HashMap<>();
 		audioMap.put("groundRecover", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/ground recover.wav").toURI().toString()));
@@ -84,6 +96,10 @@ public class Model {
 		return player1HitBox.intersects(player2HitBox);
 	}
 
+	public boolean groundCollision(){
+		return player1HitBox.intersects(groundHitBox) || player2HitBox.intersects(groundHitBox);
+	}
+
 	public void collisionLogic(){
 		/*This code will run separate functions within each fighter
 		* Getting them to react to the action their opponent is doing.
@@ -100,51 +116,10 @@ public class Model {
 	private void gameLogic() {
 		updateDirections();
 		collisionLogic();
-		// this is a way to increment across the array list data structure
-		//see if they hit anything (Collision)
-		// using enhanced for-loop style as it makes it alot easier both code wise and reading wise too
-		/*for (GameObject temp : EnemiesList)
-		{
-			for (GameObject Bullet : BulletList)
-			{
-				if ( Math.abs(temp.getCentre().getX()- Bullet.getCentre().getX())< temp.getWidth()
-					&& Math.abs(temp.getCentre().getY()- Bullet.getCentre().getY()) < temp.getHeight())
-				{
-					EnemiesList.remove(temp);
-					BulletList.remove(Bullet);
-					Score++;
-				}
-			}
-		}*/
-		
 	}
 
 	private void enemyLogic() {
 		// TODO Auto-generated method stub
-		/*for (GameObject temp : EnemiesList)
-		{
-		    // Move enemies 
-			  
-			temp.getCentre().ApplyVector(new Vector3f(0,-1,0));
-			 
-			 
-			//see if they get to the top of the screen ( remember 0 is the top 
-			if (temp.getCentre().getY()==900.0f)  // current boundary need to pass value to model 
-			{
-				//EnemiesList.remove(temp);
-				
-				// enemies win so score decreased 
-				Score--;
-			} 
-		}
-		
-		if (EnemiesList.size()<2)
-		{
-			while (EnemiesList.size()<6)
-			{
-				EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*1000),0,0)));
-			}
-		}*/
 	}
 
 	private void bulletLogic() {
@@ -173,7 +148,7 @@ public class Model {
 		//if(!controller.isActionIsActive())
 		//check for movement and if you fired a bullet
 		if(Player1.beingHit)
-			Controller.getInstance().freezePlayer1(Player1, 4000L);
+			Controller.getInstance().freezePlayer(Player1, 4000L);
 
 		//System.out.println("Player 1 action player 1 is active variable is: " + Controller.isActionPlayer1IsActive());
 
@@ -181,19 +156,19 @@ public class Model {
 			if (!Controller.getInstance().isKeyAPressed() &&
 					!Controller.getInstance().isKeySPressed() &&
 					!Controller.getInstance().isKeyDPressed() &&
-					!Controller.getInstance().isKeyJPressed() && Player1.checkGrounded(ground)) {
+					!Controller.getInstance().isKeyJPressed() && Player1.checkGrounded(groundHitBox)) {
 				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Stand2.png");
-				if (Player1.checkGrounded(ground))
+				if (Player1.checkGrounded(groundHitBox))
 					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Stand2.png");
 				else
 					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Jump.png");
 			}
 
-			if (!Player1.checkGrounded(ground))
+			if (!Player1.checkGrounded(groundHitBox))
 				getPlayer1().setGrounded(false);
 
-			if (Controller.getInstance().isKeyAPressed()) {
-				if (getPlayer1().checkGrounded(ground) && getPlayer1().grounded) {
+			if (Controller.getInstance().isKeyAPressed() && !Controller.getInstance().isKeySPressed()) {
+				if (getPlayer1().checkGrounded(groundHitBox) && getPlayer1().grounded) {
 					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
 					mediaPlayer.play();
 					getPlayer1().setGrounded(false);
@@ -205,8 +180,8 @@ public class Model {
 				Player1.getCentre().ApplyVector(new Vector3f(-2, 0, 0));
 			}
 
-			if (Controller.getInstance().isKeyDPressed()) {
-				if (getPlayer1().checkGrounded(ground) && getPlayer1().grounded) {
+			if (Controller.getInstance().isKeyDPressed() && !Controller.getInstance().isKeySPressed()) {
+				if (getPlayer1().checkGrounded(groundHitBox) && getPlayer1().grounded) {
 					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
 					mediaPlayer.play();
 					getPlayer1().setGrounded(false);
@@ -218,8 +193,8 @@ public class Model {
 				Player1.getCentre().ApplyVector(new Vector3f(2, 0, 0));
 			}
 
-			if (Controller.getInstance().isKeyWPressed()) {
-				if (getPlayer1().checkGrounded(ground) && getPlayer1().grounded) {
+			if (Controller.getInstance().isKeyWPressed() && !Controller.getInstance().isKeySPressed()) {
+				if (getPlayer1().checkGrounded(groundHitBox) && getPlayer1().grounded) {
 					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
 					mediaPlayer.play();
 					getPlayer1().setGrounded(false);
@@ -229,7 +204,7 @@ public class Model {
 			}
 
 			if (Controller.getInstance().isKeySPressed()) {
-				if (Player1.checkGrounded(ground)) {
+				if (Player1.checkGrounded(groundHitBox)) {
 					if (!getPlayer1().grounded) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("groundRecover"));
 						mediaPlayer.play();
@@ -242,8 +217,8 @@ public class Model {
 				}
 			}
 
-			if (Controller.getInstance().isKeyJPressed()) {
-				if (Player1.checkGrounded(ground)) {
+			if (Controller.getInstance().isKeyJPressed() && !Controller.getInstance().isKeySPressed()) {
+				if (Player1.checkGrounded(groundHitBox)) {
 					if (Controller.validSubstringPlayer1("jjjj")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
 						mediaPlayer.play();
@@ -282,7 +257,7 @@ public class Model {
 		//check for movement and if you fired a bullet
 
 		if(Player2.beingHit)
-			Controller.getInstance().freezePlayer2(Player2, 4000L);
+			Controller.getInstance().freezePlayer(Player2, 4000L);
 
 		//System.out.println("Player 2 action player 2 is active variable is: " + Controller.isActionPlayer2IsActive());
 
@@ -291,14 +266,14 @@ public class Model {
 					!Controller.getInstance().isKeyDownKeyPressed() &&
 					!Controller.getInstance().isKeyRightKeyPressed() &&
 					!Controller.getInstance().isKeyKPressed()) {
-				if (Player2.checkGrounded(ground))
+				if (Player2.checkGrounded(groundHitBox))
 					Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Stand2.png");
 				else
 					Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Jump.png");
 			}
 
-			if (Controller.getInstance().isKeyLeftKeyPressed()) {
-				if (getPlayer2().checkGrounded(ground) && !getPlayer2().grounded) {
+			if (Controller.getInstance().isKeyLeftKeyPressed() && !Controller.getInstance().isKeyDownKeyPressed()) {
+				if (getPlayer2().checkGrounded(groundHitBox) && !getPlayer2().grounded) {
 					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
 					mediaPlayer.play();
 					getPlayer2().setGrounded(true);
@@ -310,8 +285,8 @@ public class Model {
 				Player2.getCentre().ApplyVector(new Vector3f(-2, 0, 0));
 			}
 
-			if (Controller.getInstance().isKeyRightKeyPressed()) {
-				if (getPlayer2().checkGrounded(ground) && !getPlayer2().grounded) {
+			if (Controller.getInstance().isKeyRightKeyPressed() && !Controller.getInstance().isKeyDownKeyPressed()) {
+				if (getPlayer2().checkGrounded(groundHitBox) && !getPlayer2().grounded) {
 					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
 					mediaPlayer.play();
 					getPlayer2().setGrounded(true);
@@ -323,8 +298,8 @@ public class Model {
 				Player2.getCentre().ApplyVector(new Vector3f(2, 0, 0));
 			}
 
-			if (Controller.getInstance().isKeyUpKeyPressed()) {
-				if (getPlayer2().checkGrounded(ground) && !getPlayer2().grounded) {
+			if (Controller.getInstance().isKeyUpKeyPressed() && !Controller.getInstance().isKeyDownKeyPressed()) {
+				if (getPlayer2().checkGrounded(groundHitBox) && !getPlayer2().grounded) {
 					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("jump"));
 					mediaPlayer.play();
 					getPlayer2().setGrounded(true);
@@ -334,7 +309,7 @@ public class Model {
 			}
 
 			if (Controller.getInstance().isKeyDownKeyPressed()) {
-				if (Player2.checkGrounded(ground)) {
+				if (Player2.checkGrounded(groundHitBox)) {
 					if (!getPlayer2().grounded) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("groundRecover"));
 						mediaPlayer.play();
@@ -347,8 +322,8 @@ public class Model {
 				}
 			}
 
-			if (Controller.getInstance().isKeyKPressed()) {
-				if (Player2.checkGrounded(ground)) {
+			if (Controller.getInstance().isKeyKPressed() && !Controller.getInstance().isKeyDownKeyPressed()) {
+				if (Player2.checkGrounded(groundHitBox)) {
 					if (Controller.validSubstringPlayer2("kkkk")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
 						mediaPlayer.play();
@@ -417,6 +392,10 @@ public class Model {
 
 	public Rectangle getPlayer2HitBox() {
 		return player2HitBox;
+	}
+
+	public Rectangle getGroundHitBox() {
+		return groundHitBox;
 	}
 }
 

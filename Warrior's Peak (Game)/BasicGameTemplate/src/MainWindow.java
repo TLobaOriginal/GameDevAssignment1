@@ -44,27 +44,25 @@ SOFTWARE.
 
 public class MainWindow {
 	 private static JFrame frame = new JFrame("Game");   // Change to the name of your game
-	 private static Model gameworld= new Model();
-	 private static Viewer canvas = new  Viewer( gameworld);
-	 private KeyListener Controller =new Controller()  ; 
+	 private static Model gameworld = new Model();
+	 private static Viewer canvas = new  Viewer(gameworld);
+	 private KeyListener Controller = new Controller();
 	 private static int TargetFPS = 100;
-	 private static boolean startGame= false; 
-	 private JLabel BackgroundImageForStartMenu ;
+	 private static boolean startGame = false;
+	 private JLabel BackgroundImageForStartMenu;
 	 private final JFXPanel fxPanel = new JFXPanel();
-
 	 public static String resourcePath = "Warrior's Peak (Game)/BasicGameTemplate/res/";
 
 	 public MainWindow() {
-		frame.setSize(900, 700);  // you can customise this later and adapt it to change on size.
+		frame.setSize(900, 700);  					// you can customise this later and adapt it to change on size.
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);   //If exit // you can modify with your way of quitting , just is a template.
 		frame.setLayout(null);
 		frame.add(canvas);
 		canvas.setBounds(0, 0, 880, 700);
-		canvas.setBackground(new Color(255,255,255)); //white background  replaced by Space background but if you remove the background method this will draw a white screen
-		canvas.setVisible(false);   // this will become visible after you press the key.
-		          
+		canvas.setBackground(new Color(255,255,255)); 	//white background  replaced by Space background but if you remove the background method this will draw a white screen
+		canvas.setVisible(false);   							// this will become visible after you press the key.
 		       
-		JButton startMenuButton = new JButton("Start Game");  // start button
+		JButton startMenuButton = new JButton("Start Game");// start button
 		startMenuButton.addActionListener(new ActionListener()
 		{
 			@Override
@@ -73,7 +71,7 @@ public class MainWindow {
 				BackgroundImageForStartMenu.setVisible(false);
 				canvas.setVisible(true);
 				canvas.addKeyListener(Controller);    //adding the controller to the Canvas
-	            canvas.requestFocusInWindow();   // making sure that the Canvas is in focus so keyboard input will be taking in .
+	            canvas.requestFocusInWindow();  	  // making sure that the Canvas is in focus so keyboard input will be taking in .
 				startGame=true;
 			}});
 		startMenuButton.setBounds(400, 500, 200, 40);
@@ -98,8 +96,8 @@ public class MainWindow {
 		MainWindow hello = new MainWindow();  //sets up environment 
 		while(true)   //not nice but remember we do just want to keep looping till the end.  // this could be replaced by a thread but again we want to keep things simple 
 		{ 
-			//swing has timer class to help us time this but I'm writing my own, you can of course use the timer, but I want to set FPS and display it 
-			
+			//swing has timer class to help us time this but I'm writing my own, you can of course use the timer, but I want to set FPS and display it
+
 			int TimeBetweenFrames =  1000 / TargetFPS;
 			long FrameCheck = System.currentTimeMillis() + (long) TimeBetweenFrames; 
 			
