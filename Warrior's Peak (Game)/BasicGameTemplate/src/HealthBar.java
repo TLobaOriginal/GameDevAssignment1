@@ -1,7 +1,7 @@
 import util.Point3f;
 
 public class HealthBar {
-    private final double healthPoints;
+    private double healthPoints;
     private final double totalHealthPoints;
     private final String resourcePath = "Warrior's Peak (Game)/BasicGameTemplate/res/";
     private Point3f centre;
@@ -38,5 +38,13 @@ public class HealthBar {
 
     public double getHealthPoints() {
         return healthPoints;
+    }
+
+    public void reduceHp(double damage){
+        if(damage < healthPoints)
+            healthPoints -= damage;
+        else
+            healthPoints = 0.0;
+        updateHealthBarTexture();
     }
 }

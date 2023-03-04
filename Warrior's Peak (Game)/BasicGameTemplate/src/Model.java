@@ -1,4 +1,3 @@
-import javafx.scene.paint.Color;
 //import java.awt.*;
 import java.awt.*;
 import java.io.File;
@@ -20,9 +19,10 @@ public class Model {
 	 private GameObject ground;
 
 	 private Controller controller = Controller.getInstance();
+
 	 private CopyOnWriteArrayList<GameObject> EnemiesList  = new CopyOnWriteArrayList<GameObject>();
 	 private CopyOnWriteArrayList<GameObject> BulletList  = new CopyOnWriteArrayList<GameObject>();
-	 private int Score=0;
+	 private int round = 1;
 
 	 private HashMap<String, Media> audioMap;
 
@@ -37,12 +37,12 @@ public class Model {
 		Player1 = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/",
 				"Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Right/Stand1.png",
 				50,118,new Point3f(0,400,0),
-				"Right", new HealthBar(5000, "Right", new Point3f(0, 45, 0)));
+				"Right", new HealthBar(20000, "Right", new Point3f(0, 45, 0)));
 
 		Player2 = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/",
 				"Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/Left/Stand1.png",
 				101,208,new Point3f(700,350,0),
-				"Left", new HealthBar(5000, "Left", new Point3f(578, 45, 0)));
+				"Left", new HealthBar(20000, "Left", new Point3f(578, 45, 0)));
 
 		player1HitBox = new Rectangle(0,400, Player1.currentImage.getWidth(), Player1.currentImage.getHeight());
 		player2HitBox = new Rectangle(700, 350, Player2.currentImage.getWidth(), Player2.currentImage.getHeight());
@@ -64,22 +64,34 @@ public class Model {
 	}
 	
 	// This is the heart of the game , where the model takes in all the inputs ,decides the outcomes and then changes the model accordingly. 
-	public void gamelogic()
+	public boolean gameLogic()
 	{
-		// Player Logic first 
-		try {
-			playerLogic();
-			player2Logic();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		if(!Player1.isDead() && !Player2.isDead()) {
+			// Player Logic first
+			try {
+				player1Logic();
+				player2Logic();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			//Update the player directions
+			updateDirections();
+			// interactions between objects
+			collisionLogic();
+		}else{
+			if(Player1.isDead()) {
+				System.out.println("Player 2 wins!");
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Dead.png");
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Stun.png");
+			}
+			else if(Player2.isDead()) {
+				System.out.println("Player 1 wins!");
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Dead.png");
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Recovery.png");
+			}
+			return true;
 		}
-		// Enemy Logic next
-		enemyLogic();
-		// Bullets move next 
-		bulletLogic();
-		// interactions between objects 
-		gameLogic(); 
-	   
+		return false;
 	}
 
 	private void updateDirections(){
@@ -106,16 +118,16 @@ public class Model {
 		* If an attack is made by the opponent then we need to determine what we will do
 		* */
 		if(colliding()) {
-			if (Player1.getTexture().contains("Attack"))
-				Player2.onCollisionWithAttack(Player1.getTexture());
-			if (Player2.getTexture().contains("Attack"))
-				Player1.onCollisionWithAttack(Player2.getTexture());
+			if (Player1.getTexture().contains("Attack") || Player1.getTexture().contains("Kick")) {
+				if(!Player1.stuck) {
+					Player2.onCollisionWithAttack(Player1.getTexture());
+				}
+			}
+			if (Player2.getTexture().contains("Attack") || Player2.getTexture().contains("Kick"))
+				if(!Player2.stuck) {
+					Player1.onCollisionWithAttack(Player2.getTexture());
+				}
 		}
-	}
-
-	private void gameLogic() {
-		updateDirections();
-		collisionLogic();
 	}
 
 	private void enemyLogic() {
@@ -129,10 +141,8 @@ public class Model {
 		for (GameObject temp : BulletList) 
 		{
 		    //check to move them
-			  
 			temp.getCentre().ApplyVector(new Vector3f(0,1,0));
-			//see if they hit anything 
-			
+			//see if they hit anything
 			//see if they get to the top of the screen ( remember 0 is the top 
 			if (temp.getCentre().getY()==0)
 			{
@@ -142,30 +152,24 @@ public class Model {
 		
 	}
 
-	private void playerLogic() throws InterruptedException {
+	private void player1Logic() throws InterruptedException {
 		// smoother animation is possible if we make a target position  // done but may try to change things for students  
 
 		//if(!controller.isActionIsActive())
 		//check for movement and if you fired a bullet
-		if(Player1.beingHit)
-			Controller.getInstance().freezePlayer(Player1, 4000L);
-
 		//System.out.println("Player 1 action player 1 is active variable is: " + Controller.isActionPlayer1IsActive());
 
-		if(!Controller.isActionPlayer1IsActive()) {
+		if(!Player1.stuck) {
 			if (!Controller.getInstance().isKeyAPressed() &&
 					!Controller.getInstance().isKeySPressed() &&
 					!Controller.getInstance().isKeyDPressed() &&
-					!Controller.getInstance().isKeyJPressed() && Player1.checkGrounded(groundHitBox)) {
-				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Stand2.png");
+					!Controller.getInstance().isKeyJPressed()) {
+				//Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Stand2.png");
 				if (Player1.checkGrounded(groundHitBox))
 					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Stand2.png");
 				else
 					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Jump.png");
 			}
-
-			if (!Player1.checkGrounded(groundHitBox))
-				getPlayer1().setGrounded(false);
 
 			if (Controller.getInstance().isKeyAPressed() && !Controller.getInstance().isKeySPressed()) {
 				if (getPlayer1().checkGrounded(groundHitBox) && getPlayer1().grounded) {
@@ -218,33 +222,35 @@ public class Model {
 			}
 
 			if (Controller.getInstance().isKeyJPressed() && !Controller.getInstance().isKeySPressed()) {
+				Player1.setAttacking(true);
+				Controller.keyBoardInputs1.add('j');
 				if (Player1.checkGrounded(groundHitBox)) {
 					if (Controller.validSubstringPlayer1("jjjj")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
 						mediaPlayer.play();
 						Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Attack4.png");
-						Controller.getInstance().endOfComboPlayer1(6000L, 0L);
+						Controller.getInstance().player1AttackFreezeTime(Player1, 500L, 800L);
 					} else if (Controller.validSubstringPlayer1("jjj")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee3"));
 						mediaPlayer.play();
 						Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Attack3.png");
-						Controller.getInstance().endOfComboPlayer1(4000L, 7000L);
+						Controller.getInstance().player1AttackFreezeTime(Player1, 200L, 800L);
 					} else if (Controller.validSubstringPlayer1("jj")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee2"));
 						mediaPlayer.play();
 						Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Attack2.png");
-						Controller.getInstance().endOfComboPlayer1(4000L, 7000L);
+						Controller.getInstance().player1AttackFreezeTime(Player1, 200L, 800L);
 					} else if (Controller.validSubstringPlayer1("j")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
 						mediaPlayer.play();
 						Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Attack1.png");
-						Controller.getInstance().endOfComboPlayer1(4000L, 7000L);
+						Controller.getInstance().player1AttackFreezeTime(Player1, 200L, 800L);
 					}
 				} else {
 					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
 					mediaPlayer.play();
 					Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/JumpKick.png");
-					Controller.getInstance().endOfComboPlayer1(6000L, 0L);
+					Controller.getInstance().player1AttackFreezeTime(Player1, 400L, 0L);
 				}
 			}
 		}
@@ -253,19 +259,16 @@ public class Model {
 	}
 
 	private void player2Logic() throws InterruptedException {
-// smoother animation is possible if we make a target position  // done but may try to change things for student¬
+		// smoother animation is possible if we make a target position  // done but may try to change things for student¬
 		//check for movement and if you fired a bullet
-
-		if(Player2.beingHit)
-			Controller.getInstance().freezePlayer(Player2, 4000L);
-
 		//System.out.println("Player 2 action player 2 is active variable is: " + Controller.isActionPlayer2IsActive());
 
-		if(!Controller.isActionPlayer2IsActive()) {
+		if(!Player2.stuck) {
 			if (!Controller.getInstance().isKeyLeftKeyPressed() &&
 					!Controller.getInstance().isKeyDownKeyPressed() &&
 					!Controller.getInstance().isKeyRightKeyPressed() &&
 					!Controller.getInstance().isKeyKPressed()) {
+				//Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player2.direction + "/Stand2.png");
 				if (Player2.checkGrounded(groundHitBox))
 					Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Stand2.png");
 				else
@@ -323,33 +326,35 @@ public class Model {
 			}
 
 			if (Controller.getInstance().isKeyKPressed() && !Controller.getInstance().isKeyDownKeyPressed()) {
+				Player2.setAttacking(true);
+				Controller.keyBoardInputs2.add('k');
 				if (Player2.checkGrounded(groundHitBox)) {
 					if (Controller.validSubstringPlayer2("kkkk")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
 						mediaPlayer.play();
 						Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Attack4.png");
-						Controller.getInstance().endOfComboPlayer2(6000L, 0L);
+						Controller.getInstance().player2AttackFreezeTime(Player2, 500L, 800L);
 					} else if (Controller.validSubstringPlayer2("kkk")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee3"));
 						mediaPlayer.play();
 						Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Attack3.png");
-						Controller.getInstance().endOfComboPlayer2(4000L, 7000L);
+						Controller.getInstance().player2AttackFreezeTime(Player2, 200L, 800L);
 					} else if (Controller.validSubstringPlayer2("kk")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee2"));
 						mediaPlayer.play();
 						Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Attack2.png");
-						Controller.getInstance().endOfComboPlayer2(4000L, 7000L);
+						Controller.getInstance().player2AttackFreezeTime(Player2, 200L, 800L);
 					} else if (Controller.validSubstringPlayer2("k")) {
 						MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
 						mediaPlayer.play();
 						Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Attack1.png");
-						Controller.getInstance().endOfComboPlayer2(4000L, 7000L);
+						Controller.getInstance().player2AttackFreezeTime(Player2, 200L, 800L);
 					}
 				} else {
 					MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("melee1"));
 					mediaPlayer.play();
 					Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/JumpKick.png");
-					Controller.getInstance().endOfComboPlayer2(6000L, 0L);
+					Controller.getInstance().player2AttackFreezeTime(Player2, 300L, 0L);
 				}
 			}
 		}
@@ -378,8 +383,8 @@ public class Model {
 		return BulletList;
 	}
 
-	public int getScore() { 
-		return Score;
+	public int getRound() {
+		return round;
 	}
 
 	public GameObject getGround() {

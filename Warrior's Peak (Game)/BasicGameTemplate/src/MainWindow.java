@@ -93,8 +93,9 @@ public class MainWindow {
 	}
 
 	public static void main(String[] args) {
-		MainWindow hello = new MainWindow();  //sets up environment 
-		while(true)   //not nice but remember we do just want to keep looping till the end.  // this could be replaced by a thread but again we want to keep things simple 
+		MainWindow hello = new MainWindow();  //sets up environment
+		boolean gameOver = false;
+		while(!gameOver)   //not nice but remember we do just want to keep looping till the end.  // this could be replaced by a thread but again we want to keep things simple
 		{ 
 			//swing has timer class to help us time this but I'm writing my own, you can of course use the timer, but I want to set FPS and display it
 
@@ -107,7 +108,7 @@ public class MainWindow {
 			
 			if(startGame)
 			{
-				gameloop();
+				gameOver = gameLoop();
 			}
 			
 			//UNIT test to see if framerate matches 
@@ -115,14 +116,15 @@ public class MainWindow {
 		}
 	} 
 	//Basic Model-View-Controller pattern 
-	private static void gameloop() {
-		// model update   
-		gameworld.gamelogic();
+	private static boolean gameLoop() {
+		// model update
+		boolean gameOver = gameworld.gameLogic();
 		// view update
 		canvas.updateview();
 		// Both these calls could be setup as  a thread but we want to simplify the game logic for you.  
 		//score update  
-		 frame.setTitle("Score =  "+ gameworld.getScore());
+		 frame.setTitle("Warrior's Peak (Game): Round " + gameworld.getRound());
+		 return gameOver;
 	}
 
 }

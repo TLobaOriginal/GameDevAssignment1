@@ -47,12 +47,9 @@ public class Controller implements KeyListener {
 	private static boolean KeyDownKeyPressed = false;
 
 	//Player 1 items!
-	private static boolean player1ComboActive = false; //We can make combo string with keys
 	private static boolean actionPlayer1IsActive = false; //If the character is in an action then this will be set true
 
-
 	//Player 2 items!
-	private static boolean player2ComboActive = false; //We can make combo string with keys
 	private static boolean actionPlayer2IsActive = false; //If the character is in an action then this will be set true
 
 	public static List<Character> keyBoardInputs1 = new ArrayList<>();
@@ -85,7 +82,7 @@ public class Controller implements KeyListener {
 			case KeyEvent.VK_D:setKeyDPressed(true);break;
 			case KeyEvent.VK_J:
 				if(!actionPlayer1IsActive && !isKeyJPressed()) { //If an action is not being carried out and
-					keyBoardInputs1.add('j');
+					//keyBoardInputs1.add('j');
 					setKeyJPressed(true);
 				}
 				break;
@@ -95,7 +92,7 @@ public class Controller implements KeyListener {
 			case KeyEvent.VK_DOWN: setKeyDownKeyPressed(true);break;
 			case KeyEvent.VK_K:
 				if(!actionPlayer2IsActive && !isKeyKPressed()) { //If an action is not being carried out and
-					keyBoardInputs2.add('k');
+					//keyBoardInputs2.add('k');
 					setKeyKPressed(true);
 				}
 				break;
@@ -123,9 +120,7 @@ public class Controller implements KeyListener {
 			default:
 		    	System.out.println("Controller test:  Unknown key released");
 		        break;
-		}  
-		 //upper case 
-	
+		}
 	}
 
 
@@ -190,23 +185,10 @@ public class Controller implements KeyListener {
 		KeyKPressed = keyKPressed;
 	}
 
-	public static boolean isActionPlayer1IsActive() {
-		return actionPlayer1IsActive;
-	}
-
-	public static boolean isActionPlayer2IsActive() {
-		return actionPlayer2IsActive;
-	}
-
 	public static boolean validSubstringPlayer1(String comboList){
 		 /* Combo valid algorithm
 		 * If the string is a substring in the array
-		 System.out.println("Looking for: " + comboList);
-		System.out.print("Input string collection: ");
-		for(Character character: keyBoardInputs1){
-			System.out.print(character);
-		}*/
-		System.out.println("");
+		 * */
 		int counter = 0;
 		char charToMatch = comboList.charAt(counter);
 		for (char currentChar : keyBoardInputs1) {
@@ -225,12 +207,7 @@ public class Controller implements KeyListener {
 	public static boolean validSubstringPlayer2(String comboList){
 		/* Combo valid algorithm
 		 * If the string is a substring in the array
-		System.out.println("Looking for: " + comboList);
-		System.out.print("Input string collection: ");
-		for(Character character: keyBoardInputs2){
-			System.out.print(character);
-		}*/
-		System.out.println("");
+		 * */
 		int counter = 0;
 		char charToMatch = comboList.charAt(counter);
 		for (char currentChar : keyBoardInputs2) {
@@ -246,73 +223,58 @@ public class Controller implements KeyListener {
 		return false;
 	}
 
-	public void freezePlayer(Fighter player, long stuck){
-		new TimerThread(player, stuck);
+	public void freezePlayerHasBeenHit(Fighter player, long stuck){
+		 if(!player.stuck) {
+			 new StuckTimerThread(player, stuck);
+		 }
 	}
 
-	public void endOfComboPlayer1(long stuckTime, long comboTime) {
-		if(!player1ComboActive) {
-			new TimerThread(player1ComboActive, comboTime, keyBoardInputs1);
+	public void player1AttackFreezeTime(Fighter player, long stuckTime, long comboTime) {
+		if(!player.comboActive) {
+			new ComboTimerThread(player, comboTime, keyBoardInputs1);
 		}
-		if(!actionPlayer1IsActive) {
-			new TimerThread(actionPlayer1IsActive, stuckTime);
-		}
-	}
-
-	public void endOfComboPlayer2(long stuckTime, long comboTime) {
-		if(!player2ComboActive) {
-			new TimerThread(player2ComboActive, comboTime, keyBoardInputs2);
-		}
-		if(!actionPlayer2IsActive) {
-			new TimerThread(actionPlayer2IsActive, stuckTime);
+		if(!player.stuck) {
+			new StuckTimerThread(player, stuckTime);
 		}
 	}
 
-	public void setBooleanValue(boolean booleanValue, boolean value){
-		 booleanValue = value;
+	public void player2AttackFreezeTime(Fighter player, long stuckTime, long comboTime) {
+		if(!player.comboActive) {
+			new ComboTimerThread(player, comboTime, keyBoardInputs2);
+		}
+		if(!player.stuck) {
+			new StuckTimerThread(player, stuckTime);
+		}
 	}
 
-	class TimerThread{
-		TimerThread(boolean playerState, long milliseconds){
-			new Thread(){
-				public void run(){
-					setBooleanValue(playerState, true);
-					try {
-						Thread.sleep(milliseconds);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					setBooleanValue(playerState, false);
+	static class ComboTimerThread{
+		 ComboTimerThread(Fighter player, long milliseconds, List<Character> inputs){
+			 new Thread(() ->{
+				 player.comboActive = true;
+				 try {
+					 Thread.sleep(milliseconds);
+				 } catch (InterruptedException e) {
+					 e.printStackTrace();
+				 }
+				 player.comboActive = false;
+				 inputs.removeAll(inputs);
+			 }).start();
+		 }
+	}
+
+	static class StuckTimerThread{
+		StuckTimerThread(Fighter player, long milliseconds){
+			new Thread(() ->{
+				player.stuck = true;
+				System.out.println("DEBUG: Stuck Timer Thread started...");
+				try {
+					Thread.sleep(milliseconds);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
-			}.start();
-		}
-
-		TimerThread(boolean playerState, long milliseconds, List<Character> inputs){
-			new Thread(){
-				public void run(){
-					setBooleanValue(playerState, true);
-					try {
-						Thread.sleep(milliseconds);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					setBooleanValue(playerState, false);
-					inputs.removeAll(inputs);
-				}
-			}.start();
-		}
-
-		TimerThread(Fighter player, long milliseconds){
-			new Thread(){
-				public void run(){
-					try {
-						Thread.sleep(milliseconds);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					setBooleanValue(player.beingHit, false);
-				}
-			}.start();
+				System.out.println("DEBUG: Stuck Timer Thread ending...");
+				player.stuck = false;
+			}).start();
 		}
 	}
 }
