@@ -64,7 +64,7 @@ public class Model {
 	}
 	
 	// This is the heart of the game , where the model takes in all the inputs ,decides the outcomes and then changes the model accordingly. 
-	public boolean gameLogic()
+	public String gameLogic()
 	{
 		if(!Player1.isDead() && !Player2.isDead()) {
 			// Player Logic first
@@ -83,18 +83,27 @@ public class Model {
 		}else{
 			powerUpList.removeAll(powerUpList);
 			if(Player1.isDead()) {
-				System.out.println("Player 2 wins!");
 				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Dead.png");
 				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Stand4.png");
+				try {
+					Thread.sleep(1000);
+				}catch (Exception ex){
+					System.out.println("");
+				}
+				return "Player 2 wins!";
 			}
 			else if(Player2.isDead()) {
-				System.out.println("Player 1 wins!");
 				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Dead.png");
 				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Recovery.png");
+				try {
+					Thread.sleep(1000);
+				}catch (Exception ex){
+					System.out.println("");
+				}
+				return "Player 1 wins!";
 			}
-			return true;
 		}
-		return false;
+		return "";
 	}
 
 	private void powerUpDropRateLogic() {
@@ -162,7 +171,6 @@ public class Model {
 			}
 
 			if (powerUp.getHitBox().intersects(player1HitBox)) {
-				System.out.println("Player 1 got the boost");
 				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("charge"));
 				mediaPlayer.play();
 				powerUp.boostFighter(Player1);
@@ -172,7 +180,6 @@ public class Model {
 			} else if (powerUp.getHitBox().intersects(player2HitBox)) {
 				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("charge"));
 				mediaPlayer.play();
-				System.out.println("player 2 got the boost");
 				powerUp.boostFighter(Player2);
 				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/PowerUp.png");
 				Controller.getInstance().playerPowerUpAnimationTimer(Player2, 300L);

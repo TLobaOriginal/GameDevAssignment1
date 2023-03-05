@@ -1,4 +1,4 @@
-import java.awt.Color;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyListener;
@@ -13,6 +13,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import javafx.embed.swing.JFXPanel;
+import javafx.scene.layout.Border;
 import util.UnitTests;
 
 /*
@@ -48,8 +49,6 @@ public class MainWindow {
 	 private static Viewer canvas = new  Viewer(gameworld);
 	 private KeyListener Controller = new Controller();
 	 private static int TargetFPS = 100;
-	 private static boolean characterBio1 = false;
-	 private static boolean characterBio2 = false;
 	 private static boolean startFight = false;
 	 private JLabel BackgroundImageForStartMenu;
 	 private final JFXPanel fxPanel = new JFXPanel();
@@ -64,13 +63,20 @@ public class MainWindow {
 		canvas.setBackground(new Color(255,255,255)); 	//white background  replaced by Space background but if you remove the background method this will draw a white screen
 		canvas.setVisible(false);   							// this will become visible after you press the key.
 
-		 JButton startGameMenuButton = new JButton("Start Game");
-		 JButton continueButton1 = new JButton("Continue");
-		 JButton continueButton2 = new JButton("Start Fight");// start button
+		 JButton startGameMenuButton = new JButton("Start Game"); // start button
+		 startGameMenuButton.setFont(new Font("AvantGrande", Font.BOLD, 18));
+		 startGameMenuButton.setBackground(new Color(Color.TRANSLUCENT));
+		 JButton continueButton1 = new JButton("Continue");	//Continue passed bio
+		 continueButton1.setFont(new Font("AvantGrande", Font.BOLD, 18));
+		 continueButton1.setBackground(new Color(Color.TRANSLUCENT));
+		 JButton continueButton2 = new JButton("Start Fight"); //Get to the fight
+		 continueButton2.setFont(new Font("AvantGrande", Font.BOLD, 18));
+		 continueButton2.setBackground(new Color(Color.TRANSLUCENT));
 
 		 startGameMenuButton.addActionListener(new ActionListener() {
 			 @Override
 			 public void actionPerformed(ActionEvent e) {
+				 startGameMenuButton.setBackground(Color.WHITE);
 				 startGameMenuButton.setVisible(false);
 				 BackgroundImageForStartMenu.setVisible(false);
 				 File BackgroundToLoad = new File("Warrior's Peak (Game)/BasicGameTemplate/res/CharacterBio1.jpg");  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE
@@ -89,10 +95,10 @@ public class MainWindow {
 			 }
 		 });
 
-
 		  continueButton1.addActionListener(new ActionListener() {
 			  @Override
 			  public void actionPerformed(ActionEvent e) {
+				  continueButton1.setBackground(Color.WHITE);
 				  continueButton1.setVisible(false);
 				  BackgroundImageForStartMenu.setVisible(false);
 				  File BackgroundToLoad = new File("Warrior's Peak (Game)/BasicGameTemplate/res/CharacterBio2.jpg");  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE
@@ -116,12 +122,13 @@ public class MainWindow {
 		{
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				continueButton2.setBackground(Color.WHITE);
 				continueButton2.setVisible(false);
 				BackgroundImageForStartMenu.setVisible(false);
 				canvas.setVisible(true);
 				canvas.addKeyListener(Controller);    //adding the controller to the Canvas
 	            canvas.requestFocusInWindow();  	  // making sure that the Canvas is in focus so keyboard input will be taking in .
-				startFight =true;
+				startFight = true;
 			}});
 
 		 startGameMenuButton.setBounds(300, 500, 200, 70);
@@ -145,43 +152,66 @@ public class MainWindow {
 	}
 
 	public static void main(String[] args) {
-		MainWindow hello = new MainWindow();  //sets up environment
+		MainWindow mainWindow = new MainWindow();  //sets up environment
+		mainWindow.gameStart();
+	}
+
+	private void gameStart(){
 		boolean gameOver = false;
 		while(!gameOver)   //not nice but remember we do just want to keep looping till the end.  // this could be replaced by a thread but again we want to keep things simple
-		{ 
+		{
 			//swing has timer class to help us time this but I'm writing my own, you can of course use the timer, but I want to set FPS and display it
-
 			int TimeBetweenFrames =  1000 / TargetFPS;
-			long FrameCheck = System.currentTimeMillis() + (long) TimeBetweenFrames; 
-			
-			//wait till next time step 
-		 	while (FrameCheck > System.currentTimeMillis()){}
-			
-			if(characterBio1){
+			long FrameCheck = System.currentTimeMillis() + (long) TimeBetweenFrames;
 
-			}
-			if(characterBio2){
+			//wait till next time step
+			while (FrameCheck > System.currentTimeMillis()){}
 
-			}
 			if(startFight)
 			{
-				gameOver = gameLoop();
+				String gameStatus = gameLoop();
+				if(gameStatus.equals("Player 2 wins!"))
+				{
+					gameOver = true;
+					displayWinnerBackground("Warrior's Peak (Game)/BasicGameTemplate/res/Player2WinScreen.jpg");
+				}else if(gameStatus.equals("Player 1 wins!"))
+				{
+					gameOver = true;
+					displayWinnerBackground("Warrior's Peak (Game)/BasicGameTemplate/res/Player1WinScreen.jpg");
+				}
 			}
-			
-			//UNIT test to see if framerate matches 
-		 UnitTests.CheckFrameRate(System.currentTimeMillis(),FrameCheck, TargetFPS);
+
+			//UNIT test to see if framerate matches
+			UnitTests.CheckFrameRate(System.currentTimeMillis(),FrameCheck, TargetFPS);
 		}
-	} 
+	}
+
+	private void displayWinnerBackground(String texture) {
+		File BackgroundToLoad = new File(texture);
+		try {
+
+			BufferedImage myPicture = ImageIO.read(BackgroundToLoad);
+			BackgroundImageForStartMenu = new JLabel(new ImageIcon(myPicture));
+			BackgroundImageForStartMenu.setBounds(0, 0, 900, 700);
+			frame.add(BackgroundImageForStartMenu);
+		}  catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		frame.setVisible(true);
+		canvas.setVisible(false);
+	}
+
 	//Basic Model-View-Controller pattern 
-	private static boolean gameLoop() {
+	private static String gameLoop() {
 		// model update
-		boolean gameOver = gameworld.gameLogic();
+		String gameStatus = gameworld.gameLogic();
 		// view update
 		canvas.updateview();
-		// Both these calls could be setup as  a thread but we want to simplify the game logic for you.  
+		// Both these calls could be setup as a thread but we want to simplify the game logic for you.
 		//score update  
-		 frame.setTitle("Warrior's Peak (Game): Round " + gameworld.getRound());
-		 return gameOver;
+		 frame.setTitle("Warrior's Peak (Game): Shao Lee vs Shengwu");
+		 return gameStatus;
 	}
 
 }

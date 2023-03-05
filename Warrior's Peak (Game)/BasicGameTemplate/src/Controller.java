@@ -1,34 +1,7 @@
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.*;
-import java.util.Timer;
 
-/*
- * Created by Abraham Campbell on 15/01/2020.
- *   Copyright (c) 2020  Abraham Campbell
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-   
-   (MIT LICENSE ) e.g do what you want with this :-) 
- */ 
-
-//Singeton pattern
 public class Controller implements KeyListener {
 
 	//Player 1 keys
@@ -46,12 +19,6 @@ public class Controller implements KeyListener {
 	private static boolean KeyUpKeyPressed = false;
 	private static boolean KeyDownKeyPressed = false;
 
-	//Player 1 items!
-	private static boolean actionPlayer1IsActive = false; //If the character is in an action then this will be set true
-
-	//Player 2 items!
-	private static boolean actionPlayer2IsActive = false; //If the character is in an action then this will be set true
-
 	public static List<Character> keyBoardInputs1 = new ArrayList<>();
 	public static List<Character> keyBoardInputs2 = new ArrayList<>();
 
@@ -66,14 +33,13 @@ public class Controller implements KeyListener {
 	    }
 	   
 	@Override
-	// Key pressed , will keep triggering 
 	public void keyTyped(KeyEvent e) { 
 		 
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) 
-	{ 
+	{
 		switch (e.getKeyCode())
 		{
 			case KeyEvent.VK_A:setKeyAPressed(true);break;
@@ -81,8 +47,7 @@ public class Controller implements KeyListener {
 			case KeyEvent.VK_W:setKeyWPressed(true);break;
 			case KeyEvent.VK_D:setKeyDPressed(true);break;
 			case KeyEvent.VK_J:
-				if(!actionPlayer1IsActive && !isKeyJPressed()) { //If an action is not being carried out and
-					//keyBoardInputs1.add('j');
+				if(!isKeyJPressed()) { //If an action is not being carried out and
 					setKeyJPressed(true);
 				}
 				break;
@@ -91,13 +56,11 @@ public class Controller implements KeyListener {
 			case KeyEvent.VK_UP: setKeyUpKeyPressed(true);break;
 			case KeyEvent.VK_DOWN: setKeyDownKeyPressed(true);break;
 			case KeyEvent.VK_K:
-				if(!actionPlayer2IsActive && !isKeyKPressed()) { //If an action is not being carried out and
-					//keyBoardInputs2.add('k');
+				if(!isKeyKPressed()) { //If an action is not being carried out and
 					setKeyKPressed(true);
 				}
 				break;
 		    default:
-		    	System.out.println("Controller test:  Unknown key pressed");
 		        break;
 		}
 	}
@@ -118,7 +81,6 @@ public class Controller implements KeyListener {
 			case KeyEvent.VK_DOWN: setKeyDownKeyPressed(false);break;
 			case KeyEvent.VK_K: setKeyKPressed(false);break;
 			default:
-		    	System.out.println("Controller test:  Unknown key released");
 		        break;
 		}
 	}
@@ -270,13 +232,11 @@ public class Controller implements KeyListener {
 		StuckTimerThread(Fighter player, long milliseconds){
 			new Thread(() ->{
 				player.stuck = true;
-				System.out.println("DEBUG: Stuck Timer Thread started...");
 				try {
 					Thread.sleep(milliseconds);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				System.out.println("DEBUG: Stuck Timer Thread ending...");
 				player.stuck = false;
 			}).start();
 		}
@@ -287,66 +247,14 @@ public class Controller implements KeyListener {
 			new Thread(() ->{
 				player.stuck = true;
 				player.invulnerable = true;
-				System.out.println("DEBUG: Stuck Timer Thread started...");
 				try {
 					Thread.sleep(milliseconds);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				System.out.println("DEBUG: Stuck Timer Thread ending...");
 				player.stuck = false;
 				player.invulnerable = false;
 			}).start();
 		}
 	}
 }
-
-/*
- * 
- * KEYBOARD :-) . can you add a mouse or a gamepad
-
- *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@
-
-  @@@     @@@@    @@@@    @@@@    @@@@     @@@     @@@     @@@     @@@     @@@  
-
-  @@@     @@@     @@@     @@@@     @@@     @@@     @@@     @@@     @@@     @@@  
-
-  @@@     @@@     @@@     @@@@    @@@@     @@@     @@@     @@@     @@@     @@@  
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-@     @@@     @@@     @@@      @@      @@@     @@@     @@@     @@@     @@@     @
-
-@     @@@   W   @@@     @@@      @@      @@@     @@@     @@@     @@@     @@@     @
-
-@@    @@@@     @@@@    @@@@    @@@@    @@@@     @@@     @@@     @@@     @@@     @
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@N@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-@@@     @@@      @@      @@      @@      @@@     @@@     @@@     @@@     @@@    
-
-@@@   A   @@@  S     @@  D     @@      @@@     @@@     @@@     @@@     @@@     @@@    
-
-@@@@ @  @@@@@@@@@@@@ @@@@@@@    @@@@@@@@@@@@    @@@@@@@@@@@@     @@@@   @@@@@   
-
-    @@@     @@@@    @@@@    @@@@    $@@@     @@@     @@@     @@@     @@@     @@@
-
-    @@@ $   @@@      @@      @@ /Q   @@ ]M   @@@     @@@     @@@     @@@     @@@
-
-    @@@     @@@      @@      @@      @@      @@@     @@@     @@@     @@@     @@@
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-@       @@@                                                @@@       @@@       @
-
-@       @@@              SPACE KEY       @@@        @@ PQ     
-
-@       @@@                                                @@@        @@        
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- * 
- * 
- * 
- * 
- * 
- */
