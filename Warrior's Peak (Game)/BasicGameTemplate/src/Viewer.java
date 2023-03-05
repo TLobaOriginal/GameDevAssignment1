@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
-import javafx.scene.text.Text;
 
 
 /*
@@ -90,17 +89,32 @@ public class Viewer extends JPanel {
 				gameworld.getGround().getTexture(), g);
 
 		//Draw player
-		drawPlayer1((int)gameworld.getPlayer1().getCentre().getX(),
+		drawPlayer((int)gameworld.getPlayer1().getCentre().getX(),
 				(int)gameworld.getPlayer1().getCentre().getY(),
-				gameworld.getPlayer1().getWidth(),
-				gameworld.getPlayer1().getHeight(),
 				gameworld.getPlayer1().getTexture(), g);
 
-		drawPlayer2((int)gameworld.getPlayer2().getCentre().getX(),
+		drawPlayer((int)gameworld.getPlayer2().getCentre().getX(),
 				(int)gameworld.getPlayer2().getCentre().getY(),
-				gameworld.getPlayer2().getWidth(),
-				gameworld.getPlayer2().getHeight(),
 				gameworld.getPlayer2().getTexture(), g);
+
+		drawPlayerStats(gameworld.getPlayer1(),
+				(int)gameworld.getPlayer1().getHealthBar().getCentre().getX(),
+				(int)gameworld.getPlayer1().getHealthBar().getCentre().getY() + 50,
+				(int)gameworld.getPlayer1().getHealthBar().getCentre().getX() + 70,
+				(int)gameworld.getPlayer1().getHealthBar().getCentre().getY() + 120,
+				g);
+
+		drawPlayerStats(gameworld.getPlayer2(),
+				(int)gameworld.getPlayer2().getHealthBar().getCentre().getX(),
+				(int)gameworld.getPlayer1().getHealthBar().getCentre().getY() + 50,
+				(int)gameworld.getPlayer2().getHealthBar().getCentre().getX() + 40,
+				(int)gameworld.getPlayer2().getHealthBar().getCentre().getY() + 120,
+				g);
+
+		//Draw Power ups
+		gameworld.getPowerUpList().forEach((powerUp) ->{
+			drawPowerUps((int) powerUp.getCentre().getX(), (int)powerUp.getCentre().getY(), powerUp.getWidth(), powerUp.getHeight(), powerUp.getTexture(), g);
+		});
 
 		drawPlayer1Health((int)gameworld.getPlayer1().getHealthBar().getCentre().getX(),
 				(int)gameworld.getPlayer1().getHealthBar().getCentre().getY(),
@@ -114,22 +128,27 @@ public class Viewer extends JPanel {
 				(int)gameworld.getPlayer2().getHealthBar().getCentre().getY() + 50,
 				gameworld.getPlayer2().getHealthBar().getTexture(), g);
 
+
 		//drawPlayerHitBox(gameworld.getPlayer1HitBox(), g);
 		//drawPlayerHitBox(gameworld.getPlayer2HitBox(), g);
 		//drawGroundHitBox(gameworld.getGroundHitBox(), g);
 		//Draw Bullets
-		// change back 
-		gameworld.getBullets().forEach((temp) -> 
-		{ 
-			drawBullet((int) temp.getCentre().getX(), (int) temp.getCentre().getY(), (int) temp.getWidth(), (int) temp.getHeight(), temp.getTexture(),g);	 
-		}); 
-		
-		//Draw Enemies   
-		gameworld.getEnemies().forEach((temp) -> 
-		{
-			drawEnemies((int) temp.getCentre().getX(), (int) temp.getCentre().getY(), (int) temp.getWidth(), (int) temp.getHeight(), temp.getTexture(),g);	 
-		 
-	    }); 
+		// change back
+	}
+
+	private void drawPlayerStats(Fighter player, int x, int y, int textX, int textY, Graphics g) {
+		File TextureToLoad = new File("Warrior's Peak (Game)/BasicGameTemplate/res/CharacterInfoScreen.png");  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE
+		try {
+			Image myImage = ImageIO.read(TextureToLoad);
+			g.drawImage(myImage, x, y, 300, 150, null);
+			g.setFont(new Font("AvantGrande", Font.BOLD, 20));
+			g.setColor(Color.WHITE);
+			g.drawString("Attack Power: " + player.attackPower, textX, textY);
+			g.drawString("Defence: " + player.defence, textX, textY + 30);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void drawPlayer1Health(int x, int y, int textX, int textY, String texture, Graphics g) {
@@ -138,7 +157,7 @@ public class Viewer extends JPanel {
 			Image myImage = ImageIO.read(TextureToLoad);
 			g.drawImage(myImage, x, y, 300, 100, null);
 			g.setFont(new Font("AvantGrande", Font.BOLD, 28));
-			g.setColor(Color.WHITE);
+			g.setColor(Color.BLACK);
 			g.drawString(Integer.toString((int)gameworld.getPlayer1().getHealthBar().getHealthPoints()), textX, textY);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -152,7 +171,7 @@ public class Viewer extends JPanel {
 			Image myImage = ImageIO.read(TextureToLoad);
 			g.drawImage(myImage, x, y, 300, 100, null);
 			g.setFont(new Font("AvantGrande", Font.BOLD, 28));
-			g.setColor(Color.WHITE);
+			g.setColor(Color.BLACK);
 			g.drawString(Integer.toString((int)gameworld.getPlayer2().getHealthBar().getHealthPoints()), textX, textY);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -191,20 +210,19 @@ public class Viewer extends JPanel {
 		}
 	}
 
-	private void drawEnemies(int x, int y, int width, int height, String texture, Graphics g) {
-		File TextureToLoad = new File(texture);  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE 
+	private void drawPowerUps(int x, int y, int width, int height, String texture, Graphics g) {
+		File TextureToLoad = new File(texture);  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE
 		try {
 			Image myImage = ImageIO.read(TextureToLoad);
-			//The spirte is 32x32 pixel wide and 4 of them are placed together so we need to grab a different one each time 
-			//remember your training :-) computer science everything starts at 0 so 32 pixels gets us to 31  
-			int currentPositionInAnimation= ((int) (CurrentAnimationTime%4 )*32); //slows down animation so every 10 frames we get another frame so every 100ms 
-			g.drawImage(myImage, x,y, x+width, y+height, currentPositionInAnimation  , 0, currentPositionInAnimation+31, 32, null); 
-			
+			//The spirte is 32x32 pixel wide and 4 of them are placed together so we need to grab a different one each time
+			//remember your training :-) computer science everything starts at 0 so 32 pixels gets us to 31
+			//int currentPositionInAnimation= ((int) (CurrentAnimationTime%4 )*32); //slows down animation so every 10 frames we get another frame so every 100ms
+			//g.drawImage(myImage, x,y, x+width, y+height, currentPositionInAnimation  , 0, currentPositionInAnimation+31, 32, null);
+			g.drawImage(myImage, x, y, width, height, null);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
-		
+		}
 	}
 
 	private void drawBackground(Graphics g)
@@ -235,13 +253,13 @@ public class Viewer extends JPanel {
 	}
 	
 
-	private void drawPlayer1(int x, int y, int width, int height, String texture, Graphics g) {
+	private void drawPlayer(int x, int y, String texture, Graphics g) {
 		File TextureToLoad = new File(texture);  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE 
 		try {
 			Image myImage = ImageIO.read(TextureToLoad);
 			//The spirte is 32x32 pixel wide and 4 of them are placed together so we need to grab a different one each time 
 			//remember your training :-) computer science everything starts at 0 so 32 pixels gets us to 31  
-			int currentPositionInAnimation= ((int) ((CurrentAnimationTime%40)/10))*32; //slows down animation so every 10 frames we get another frame so every 100ms 
+			//int currentPositionInAnimation= ((int) ((CurrentAnimationTime%40)/10))*32; //slows down animation so every 10 frames we get another frame so every 100ms
 			//g.drawImage(myImage, x,y, x+width, y+height, currentPositionInAnimation  , 0, currentPositionInAnimation+31, 32, null);
 			g.drawImage(myImage, x, y, null);
 			
@@ -256,31 +274,6 @@ public class Viewer extends JPanel {
 		// background image from https://www.needpix.com/photo/download/677346/space-stars-nebula-background-galaxy-universe-free-pictures-free-photos-free-images
 		
 	}
-
-	private void drawPlayer2(int x, int y, int width, int height, String texture, Graphics g) {
-		File TextureToLoad = new File(texture);  //should work okay on OSX and Linux but check if you have issues depending your eclipse install or if your running this without an IDE
-		try {
-			Image myImage = ImageIO.read(TextureToLoad);
-			//The spirte is 32x32 pixel wide and 4 of them are placed together so we need to grab a different one each time
-			//remember your training :-) computer science everything starts at 0 so 32 pixels gets us to 31
-			int currentPositionInAnimation= ((int) ((CurrentAnimationTime%40)/10))*32; //slows down animation so every 10 frames we get another frame so every 100ms
-			//g.drawImage(myImage, x,y, x+width, y+height, currentPositionInAnimation  , 0, currentPositionInAnimation+31, 32, null);
-			g.drawImage(myImage, x, y, null);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		//g.drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, observer));
-		//Lighnting Png from https://opengameart.org/content/animated-spaceships  its 32x32 thats why I know to increament by 32 each time
-		// Bullets from https://opengameart.org/forumtopic/tatermands-art
-		// background image from https://www.needpix.com/photo/download/677346/space-stars-nebula-background-galaxy-universe-free-pictures-free-photos-free-images
-
-	}
-		 
-	 
-
 }
 
 

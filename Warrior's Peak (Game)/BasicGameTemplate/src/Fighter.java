@@ -22,7 +22,15 @@ public class Fighter extends GameObject {
     boolean attacking = false;
     boolean comboActive = false;
     boolean stuck = false;
+    boolean invulnerable = false;
+
+
+    //Player's audioMaps
     private HashMap<String, Media> audioMap;
+
+    //Stats
+    int attackPower = 100;
+    int defence = 100;
 
     public Fighter(String resourcePackageLocation, String textureLocation,
                    int width, int height, Point3f centre,
@@ -47,10 +55,15 @@ public class Fighter extends GameObject {
         this.playerHitBox = playerHitBox;
     }
 
+    public void setOpponent(Fighter opponent) {
+        this.opponent = opponent;
+    }
+
     public HealthBar getHealthBar() {
         return healthBar;
     }
 
+    //Player collision functions
     public void onCollisionWithAttack(String opponentAttackPose){
         if((!getTexture().contains("Attack")) || (opponentAttackPose.contains("Attack4") && !getTexture().contains("Attack4"))){
             beingHit(opponentAttackPose);
@@ -70,35 +83,35 @@ public class Fighter extends GameObject {
             mediaPlayer.play();
             setTextureLocation(resourcePackageLocation + direction + "/Hurt1.png");
             Controller.getInstance().freezePlayerHasBeenHit(this, 200L);
-            healthBar.reduceHp(100);
+            healthBar.reduceHp(((double)opponent.attackPower/defence) * 100);
         }
         else if(opponentAttackPose.contains("Attack2")) {
             setTextureLocation(resourcePackageLocation + direction + "/Hurt2.png");
             MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("punch2"));
             mediaPlayer.play();
             Controller.getInstance().freezePlayerHasBeenHit(this, 200L);
-            healthBar.reduceHp(100);
+            healthBar.reduceHp(((double)opponent.attackPower/defence) * 100);
         }
         else if(opponentAttackPose.contains("Attack3")) {
             setTextureLocation(resourcePackageLocation + direction + "/Hurt1.png");
             MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("punch1"));
             mediaPlayer.play();
             Controller.getInstance().freezePlayerHasBeenHit(this, 200L);
-            healthBar.reduceHp(150);
+            healthBar.reduceHp(((double)opponent.attackPower/defence) * 150);
         }
         else if(opponentAttackPose.contains("Attack4")) {
             MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("punch3"));
             mediaPlayer.play();
             setTextureLocation(resourcePackageLocation + direction + "/HurtLaunch.png");
             Controller.getInstance().freezePlayerHasBeenHit(this, 200L);
-            healthBar.reduceHp(200);
+            healthBar.reduceHp(((double)opponent.attackPower/defence) * 200);
         }
         else if(opponentAttackPose.contains("JumpKick")) {
             MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("punch3"));
             mediaPlayer.play();
             setTextureLocation(resourcePackageLocation + direction + "/HurtLaunch.png");
             Controller.getInstance().freezePlayerHasBeenHit(this, 200L);
-            healthBar.reduceHp(150);
+            healthBar.reduceHp(((double)opponent.attackPower/defence) * 150);
         }
         setBeingHit(false);
     }
@@ -107,6 +120,7 @@ public class Fighter extends GameObject {
         beingHit = b;
     }
 
+    //Winning condition function
     public boolean isDead(){
         return healthBar.getHealthPoints() <= 0.0;
     }
@@ -127,4 +141,51 @@ public class Fighter extends GameObject {
         this.attacking = attacking;
     }
 
+    //statsFunction
+    public void setAttackPower(int attackPower) {
+        this.attackPower = attackPower;
+    }
+
+    public void setDefence(int defence) {
+        this.defence = defence;
+    }
+
+    public int getAttackPower() {
+        return attackPower;
+    }
+
+    public int getDefence() {
+        return defence;
+    }
+
+    //Stat boosting Functions
+    public void boostAttack(int boost){
+        attackPower += boost;
+        new StatBoostTimeThread(this, boost, BoostableStats.ATTACK);
+    }
+
+    public void boostDefence(int boost){
+        defence += boost;
+        new StatBoostTimeThread(this, boost, BoostableStats.DEFENCE);
+    }
+
+    static class StatBoostTimeThread{
+        StatBoostTimeThread(Fighter player, int boost, BoostableStats stat){
+            new Thread(() ->{
+                try{
+                    Thread.sleep(10000L);
+                    switch (stat){
+                        case DEFENCE:
+                            player.setDefence(player.getDefence() - boost);
+                            break;
+                        case ATTACK:
+                            player.setAttackPower(player.getAttackPower() - boost);
+                            break;
+                    }
+                }catch (Exception ex){
+                    System.out.println("Failed threading");
+                }
+            }).start();
+        }
+    }
 }

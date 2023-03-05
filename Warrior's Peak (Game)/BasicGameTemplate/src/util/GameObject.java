@@ -1,4 +1,11 @@
 package util;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
 /*
  * Created by Abraham Campbell on 15/01/2020.
  *   Copyright (c) 2020  Abraham Campbell
@@ -28,20 +35,28 @@ public class GameObject {
 	private Point3f centre= new Point3f(0,0,0);			// Centre of object, using 3D as objects may be scaled  
 	private int width=10;
 	private int height=10;
+	private Rectangle hitBox;
 	private boolean hasTextured=false;
-	private String textureLocation; 
+	private String textureLocation;
 	private String blanktexture= "BasicGameTemplate Final/BasicGameTemplate/res/blankSprite.png";
-	
+
 	public GameObject() {  
 		
 	}
 	
-    public GameObject(String textureLocation,int width,int height,Point3f centre) { 
+    public GameObject(String textureLocation,int width,int height,Point3f centre) {
     	 hasTextured=true;
     	 this.textureLocation=textureLocation;
     	 this.width=width;
 		 this.height=height;
 		 this.centre =centre;
+		 try {
+			 BufferedImage currentImage = ImageIO.read(new File(textureLocation));
+			 hitBox = new Rectangle((int)centre.getX(), (int)centre.getY(), currentImage.getWidth(), currentImage.getHeight());
+		 }catch (IOException ex){
+			 System.out.println("!!!Game Object hit box failed to create!!!");
+			 ex.printStackTrace();
+		 }
 	}
 
 	public void setTextureLocation(String textureLocation) {
@@ -54,9 +69,11 @@ public class GameObject {
 
 	public void setCentre(Point3f centre) {
 		this.centre = centre;
-		
-		//make sure to put boundaries on the gameObject 
-	 
+		this.hitBox.setLocation((int)centre.getX(), (int)centre.getY());
+	}
+
+	public void updateHitBoxCentre(){
+		this.hitBox.setLocation((int)centre.getX(), (int)centre.getY());
 	}
 
 	public int getWidth() {
@@ -69,13 +86,16 @@ public class GameObject {
 
 	public String getTexture() {
 		if(hasTextured) 
-			{
+		{
 			return textureLocation;
-			}
-		 
-		return blanktexture; 
+		}
+
+		return blanktexture;
 	}
-  
+
+	public Rectangle getHitBox() {
+		return hitBox;
+	}
 }
 
 /*

@@ -1,0 +1,1 @@
+enum BoostableStats {ATTACK, DEFENCE}

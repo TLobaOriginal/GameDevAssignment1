@@ -2,6 +2,7 @@
 import java.awt.*;
 import java.io.File;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -10,29 +11,24 @@ import util.Point3f;
 import util.Vector3f; 
 
 public class Model {
-	 private Fighter Player1;
-	 private Fighter Player2;
-	 private Rectangle player1HitBox; //Hit box logic referenced from iUniversityPrep's youtube video 'Simple hitboxes'
-									  //Idea inspired by Abey Campbell
-	 private Rectangle player2HitBox;
-	 private Rectangle groundHitBox;
-	 private GameObject ground;
+	 private final Fighter Player1;
+	 private final Fighter Player2;
+	 private final Rectangle player1HitBox; //Hit box logic referenced from iUniversityPrep's youtube video 'Simple hitboxes'
+	 private final Rectangle player2HitBox;	//Idea inspired by Abey Campbell
+	 private final Rectangle groundHitBox;
+	 private final GameObject ground;
 
 	 private Controller controller = Controller.getInstance();
 
 	 private CopyOnWriteArrayList<GameObject> EnemiesList  = new CopyOnWriteArrayList<GameObject>();
 	 private CopyOnWriteArrayList<GameObject> BulletList  = new CopyOnWriteArrayList<GameObject>();
+	 private CopyOnWriteArrayList<PowerUp> powerUpList = new CopyOnWriteArrayList<>();
 	 private int round = 1;
 
-	 private HashMap<String, Media> audioMap;
+	 private final HashMap<String, Media> audioMap;
 
 
 	public Model() {
-		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*50+400 ),0,0)));
-		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*50+500 ),0,0)));
-		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+500 ),0,0)));
-		//EnemiesList.add(new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/UFO.png",50,50,new Point3f(((float)Math.random()*100+400 ),0,0)));
-
 		ground = new GameObject("Warrior's Peak (Game)/BasicGameTemplate/res/Ground.png", 1400, 200, new Point3f(0, 100, 0));
 		Player1 = new Fighter("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/",
 				"Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/Right/Stand1.png",
@@ -43,6 +39,9 @@ public class Model {
 				"Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/Left/Stand1.png",
 				101,208,new Point3f(700,350,0),
 				"Left", new HealthBar(20000, "Left", new Point3f(578, 45, 0)));
+
+		Player1.setOpponent(Player2);
+		Player2.setOpponent(Player1);
 
 		player1HitBox = new Rectangle(0,400, Player1.currentImage.getWidth(), Player1.currentImage.getHeight());
 		player2HitBox = new Rectangle(700, 350, Player2.currentImage.getWidth(), Player2.currentImage.getHeight());
@@ -61,6 +60,7 @@ public class Model {
 		audioMap.put("punch1", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/punch1.wav").toURI().toString()));
 		audioMap.put("punch2", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/punch2.wav").toURI().toString()));
 		audioMap.put("punch3", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/punch3.wav").toURI().toString()));
+		audioMap.put("charge", new Media(new File("Warrior's Peak (Game)/BasicGameTemplate/res/audio/charge.wav").toURI().toString()));
 	}
 	
 	// This is the heart of the game , where the model takes in all the inputs ,decides the outcomes and then changes the model accordingly. 
@@ -76,13 +76,16 @@ public class Model {
 			}
 			//Update the player directions
 			updateDirections();
-			// interactions between objects
+			// interactions between players
 			collisionLogic();
+			powerUpDropRateLogic();
+			powerUpLogic();
 		}else{
+			powerUpList.removeAll(powerUpList);
 			if(Player1.isDead()) {
 				System.out.println("Player 2 wins!");
 				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/Dead.png");
-				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Stun.png");
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/Stand4.png");
 			}
 			else if(Player2.isDead()) {
 				System.out.println("Player 1 wins!");
@@ -92,6 +95,22 @@ public class Model {
 			return true;
 		}
 		return false;
+	}
+
+	private void powerUpDropRateLogic() {
+		//We need a 1 in 1000 chance of a power up being created because we don't
+		//Want too many being around
+		Random random = new Random();
+		int successOrNot = Math.abs(random.nextInt() % 650);
+		if(successOrNot == 0){
+			int powerUpsOption = random.nextInt() % 2;
+			if(powerUpsOption == 0){
+				powerUpList.add(new PowerUp("Warrior's Peak (Game)/BasicGameTemplate/res/powerUps/attackBoostCrest.png",50,50,new Point3f((Math.abs(random.nextInt() % 700)) + 100,0,0), Math.abs(random.nextInt() % 300 + 1), BoostableStats.ATTACK));
+			}
+			else if(powerUpsOption == 1){
+				powerUpList.add(new PowerUp("Warrior's Peak (Game)/BasicGameTemplate/res/powerUps/defenceBoostCrest.png",50,50,new Point3f((Math.abs(random.nextInt() % 700)) + 100,0,0), Math.abs(random.nextInt() % 50), BoostableStats.DEFENCE));
+			}
+		}
 	}
 
 	private void updateDirections(){
@@ -123,15 +142,43 @@ public class Model {
 					Player2.onCollisionWithAttack(Player1.getTexture());
 				}
 			}
-			if (Player2.getTexture().contains("Attack") || Player2.getTexture().contains("Kick"))
-				if(!Player2.stuck) {
+			if (Player2.getTexture().contains("Attack") || Player2.getTexture().contains("Kick")) {
+				if (!Player2.stuck) {
 					Player1.onCollisionWithAttack(Player2.getTexture());
 				}
+			}
 		}
 	}
 
-	private void enemyLogic() {
-		// TODO Auto-generated method stub
+	private void powerUpLogic() {
+		for (PowerUp powerUp : powerUpList) {
+			// Move power ups
+			powerUp.getCentre().ApplyVector(new Vector3f(0, -1, 0));
+			powerUp.updateHitBoxCentre();
+
+			if (powerUp.getHitBox().intersects(groundHitBox)) {
+				System.out.println("Hit the ground");
+				powerUpList.remove(powerUp);
+			}
+
+			if (powerUp.getHitBox().intersects(player1HitBox)) {
+				System.out.println("Player 1 got the boost");
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("charge"));
+				mediaPlayer.play();
+				powerUp.boostFighter(Player1);
+				Player1.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/fighterPlayer/" + Player1.direction + "/PowerUp.png");
+				Controller.getInstance().playerPowerUpAnimationTimer(Player1, 300L);
+				powerUpList.remove(powerUp);
+			} else if (powerUp.getHitBox().intersects(player2HitBox)) {
+				MediaPlayer mediaPlayer = new MediaPlayer(audioMap.get("charge"));
+				mediaPlayer.play();
+				System.out.println("player 2 got the boost");
+				powerUp.boostFighter(Player2);
+				Player2.setTextureLocation("Warrior's Peak (Game)/BasicGameTemplate/res/opponentPlayer/" + Player2.direction + "/PowerUp.png");
+				Controller.getInstance().playerPowerUpAnimationTimer(Player2, 300L);
+				powerUpList.remove(powerUp);
+			}
+		}
 	}
 
 	private void bulletLogic() {
@@ -375,12 +422,8 @@ public class Model {
 		return Player2;
 	}
 
-	public CopyOnWriteArrayList<GameObject> getEnemies() {
-		return EnemiesList;
-	}
-	
-	public CopyOnWriteArrayList<GameObject> getBullets() {
-		return BulletList;
+	public CopyOnWriteArrayList<PowerUp> getPowerUpList() {
+		return powerUpList;
 	}
 
 	public int getRound() {

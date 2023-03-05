@@ -229,6 +229,10 @@ public class Controller implements KeyListener {
 		 }
 	}
 
+	public void playerPowerUpAnimationTimer(Fighter player, long stuckAndInvulnerableTime){
+		 new PowerUpTimer(player, stuckAndInvulnerableTime);
+	}
+
 	public void player1AttackFreezeTime(Fighter player, long stuckTime, long comboTime) {
 		if(!player.comboActive) {
 			new ComboTimerThread(player, comboTime, keyBoardInputs1);
@@ -274,6 +278,24 @@ public class Controller implements KeyListener {
 				}
 				System.out.println("DEBUG: Stuck Timer Thread ending...");
 				player.stuck = false;
+			}).start();
+		}
+	}
+
+	static class PowerUpTimer{
+		PowerUpTimer(Fighter player, long milliseconds){
+			new Thread(() ->{
+				player.stuck = true;
+				player.invulnerable = true;
+				System.out.println("DEBUG: Stuck Timer Thread started...");
+				try {
+					Thread.sleep(milliseconds);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				System.out.println("DEBUG: Stuck Timer Thread ending...");
+				player.stuck = false;
+				player.invulnerable = false;
 			}).start();
 		}
 	}
